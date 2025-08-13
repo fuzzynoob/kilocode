@@ -52,6 +52,7 @@ vi.mock("../../prompts/responses")
 
 // Mock TelemetryService
 vi.mock("../../../../packages/telemetry/src/TelemetryService", () => ({
+	// kilocode_change
 	TelemetryService: {
 		get instance() {
 			return {
@@ -120,7 +121,7 @@ describe("getEnvironmentDetails", () => {
 			} as unknown as RooIgnoreController,
 			clineMessages: [],
 			api: {
-				fetchModel: vi.fn().mockResolvedValue({ id: "test-model", info: { contextWindow: 100000 } }),
+				fetchModel: vi.fn().mockResolvedValue({ id: "test-model", info: { contextWindow: 100000 } }), // kilocode_change
 				createMessage: vi.fn(),
 				countTokens: vi.fn(),
 			} as unknown as ApiHandler,

@@ -204,6 +204,7 @@ function createMockCline(): any {
 		// CRITICAL: Always ensure image support is enabled
 		api: {
 			fetchModel: vi.fn().mockResolvedValue({
+				// kilocode_change
 				info: {
 					supportsImages: true,
 					contextWindow: 100000, // Add context window for token limit calculations
@@ -220,6 +221,7 @@ function createMockCline(): any {
 function setImageSupport(mockCline: any, supportsImages: boolean | undefined): void {
 	mockCline.api = {
 		fetchModel: vi.fn().mockResolvedValue({
+			// kilocode_change
 			info: {
 				supportsImages,
 				contextWindow: 100000, // Add context window for token limit calculations
