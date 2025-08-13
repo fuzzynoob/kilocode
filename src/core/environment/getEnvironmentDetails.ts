@@ -215,7 +215,7 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 	let modelId: string
 	let modelInfo: ModelInfo
 	try {
-		;({ id: modelId, info: modelInfo } = await cline.api.fetchModel()) // kilocode_change: await
+		;({ id: modelId, info: modelInfo } = await cline.api.fetchModel())
 	} catch (e) {
 		TelemetryService.instance.captureException(e, { context: "getEnvironmentDetails" })
 		await cline.say("error", t("kilocode:notLoggedInError", { error: e instanceof Error ? e.message : String(e) }))
