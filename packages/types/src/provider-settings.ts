@@ -170,6 +170,7 @@ const openAiSchema = baseProviderSettingsSchema.extend({
 const ollamaSchema = baseProviderSettingsSchema.extend({
 	ollamaModelId: z.string().optional(),
 	ollamaBaseUrl: z.string().optional(),
+	ollamaNumCtx: z.number().optional(),
 })
 
 const vsCodeLmSchema = baseProviderSettingsSchema.extend({
