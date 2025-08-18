@@ -181,48 +181,46 @@ describe("GhostProvider", () => {
 		}
 	}
 
-	describe("File-based Suggestions (Legacy Format - Skipped)", () => {
-		it.skip("should apply a simple addition from files", async () => {
-			// These tests use the old diff format, but we've moved to streaming XML format only
+	describe("File-based Suggestions", () => {
+		it("should apply a simple addition from files", async () => {
 			await runFileBasedTest("simple-addition")
 		})
 
-		it.skip("should apply multiple line additions from files", async () => {
+		it("should apply multiple line additions from files", async () => {
 			await runFileBasedTest("multiple-line-additions")
 		})
 
-		it.skip("should apply line deletions from files", async () => {
+		it("should apply line deletions from files", async () => {
 			await runFileBasedTest("line-deletions")
 		})
 
-		it.skip("should apply mixed addition and deletion from files", async () => {
+		it("should apply mixed addition and deletion from files", async () => {
 			await runFileBasedTest("mixed-addition-deletion")
 		})
 
-		it.skip("should handle empty diff response from files", async () => {
+		it("should handle empty diff response from files", async () => {
 			await runFileBasedTest("empty-diff-response")
 		})
 
-		it.skip("should apply function rename and var to const changes from files", async () => {
+		it("should apply function rename and var to const changes from files", async () => {
 			await runFileBasedTest("function-rename-var-to-const")
 		})
 	})
 
-	describe("Sequential application (Legacy Format - Skipped)", () => {
-		it.skip("should handle an inverse individual application of mixed operations", async () => {
-			// These tests use the old diff format, but we've moved to streaming XML format only
+	describe("Sequential application", () => {
+		it("should handle an inverse individual application of mixed operations", async () => {
 			await runFileBasedTest("sequential-mixed-operations")
 		})
 
-		it.skip("should handle sequential partial application of mixed operations", async () => {
+		it("should handle sequential partial application of mixed operations", async () => {
 			await runFileBasedTest("partial-mixed-operations")
 		})
 
-		it.skip("should handle random individual application of mixed operations", async () => {
+		it("should handle random individual application of mixed operations", async () => {
 			await runFileBasedTest("random-mixed-operations")
 		})
 
-		it.skip("should handle complex multi-group operations", async () => {
+		it("should handle complex multi-group operations", async () => {
 			await runFileBasedTest("complex-multi-group")
 		})
 	})
