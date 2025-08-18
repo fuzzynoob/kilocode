@@ -48,7 +48,6 @@ export class GhostModel {
 		systemPrompt: string,
 		userPrompt: string,
 		onChunk: (chunk: ApiStreamChunk) => void,
-		startTime?: number,
 	): Promise<{
 		cost: number
 		inputTokens: number
@@ -75,12 +74,6 @@ export class GhostModel {
 
 		try {
 			for await (const chunk of stream) {
-				if (startTime) {
-					const elapsedTime = performance.now() - startTime
-					console.log(`Chunk received after ${elapsedTime.toFixed(2)} ms`)
-					console.log("Chunk data:", chunk)
-				}
-
 				// Call the callback with each chunk
 				onChunk(chunk)
 

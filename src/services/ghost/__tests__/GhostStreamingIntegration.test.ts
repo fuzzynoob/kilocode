@@ -102,7 +102,7 @@ describe("Ghost Streaming Integration", () => {
 			}
 
 			// Run the streaming generation
-			const usageInfo = await model.generateResponse("system prompt", "user prompt", onChunk, startTime)
+			const usageInfo = await model.generateResponse("system prompt", "user prompt", onChunk)
 
 			const endTime = performance.now()
 

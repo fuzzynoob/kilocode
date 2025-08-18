@@ -298,6 +298,7 @@ export class GhostProvider {
 		this.strategy.initializeStreamingParser(context)
 
 		let hasShownFirstSuggestion = false
+		let firstChunkReceived = false
 		let totalCost = 0
 		let totalInputTokens = 0
 		let totalOutputTokens = 0
@@ -308,6 +309,12 @@ export class GhostProvider {
 		const onChunk = (chunk: any) => {
 			if (this.isRequestCancelled) {
 				return
+			}
+
+			if (!firstChunkReceived) {
+				firstChunkReceived = true
+				const firstChunkTime = performance.now()
+				console.log(`First chunk received after ${(firstChunkTime - startTime).toFixed(2)} ms`)
 			}
 
 			if (chunk.type === "text") {
@@ -344,7 +351,7 @@ export class GhostProvider {
 
 		try {
 			// Start streaming generation
-			const usageInfo = await this.model.generateResponse(systemPrompt, userPrompt, onChunk, startTime)
+			const usageInfo = await this.model.generateResponse(systemPrompt, userPrompt, onChunk)
 
 			const endTime = performance.now()
 			console.log(`Total response time: ${(endTime - startTime).toFixed(2)} ms`)

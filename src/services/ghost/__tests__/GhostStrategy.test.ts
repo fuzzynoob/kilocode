@@ -58,7 +58,7 @@ describe("GhostStrategy", () => {
 			expect(prompt).toContain("## Full Code")
 			expect(prompt).toContain("<<<AUTOCOMPLETE_HERE>>>")
 			expect(prompt).toContain("const x = 1;\n<<<AUTOCOMPLETE_HERE>>>const y = 2;")
-			expect(prompt).toContain("Focus on completing code from this position")
+			expect(prompt).toContain("Your FIRST suggestion must be the immediate completion at this exact position")
 		})
 
 		it("should handle cursor at beginning of document", () => {
@@ -109,7 +109,9 @@ describe("GhostStrategy", () => {
 		it("should include autocomplete instructions", () => {
 			const instructions = strategy["getInstructionsPrompt"]()
 			expect(instructions).toContain("<<<AUTOCOMPLETE_HERE>>>")
-			expect(instructions).toContain("focus on intelligently completing the code from that position")
+			expect(instructions).toContain(
+				"your FIRST and PRIMARY suggestion must be the immediate completion at that exact position",
+			)
 		})
 	})
 

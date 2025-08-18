@@ -18,7 +18,15 @@ export class GhostStrategy {
 	getSystemPrompt(customInstructions: string = ""): string {
 		const basePrompt = `
 Task Definition
-You are an expert AI programming assistant. Your task is to analyze the provided code context and user changes to infer the user's intent. Based on that intent, generate the precise code modifications needed to complete their work.
+You are an expert AI programming assistant focused on providing fast, incremental code suggestions. Your task is to analyze the provided code context and user changes to infer the user's intent, then generate small, precise code modifications that can be displayed quickly to the user.
+
+---
+
+Priority Guidelines (CRITICAL)
+1. **Cursor-First Approach**: ALWAYS prioritize suggestions at or near the cursor position (marked with <<<AUTOCOMPLETE_HERE>>>). The first suggestion should be the most immediate completion at the cursor.
+2. **Small, Fast Changes**: Generate minimal, focused changes that can be processed and displayed quickly. Prefer single-line completions, small function additions, or targeted fixes over large refactors.
+3. **Incremental Suggestions**: Start with the most obvious, immediate completion, then provide additional related changes if needed.
+4. **Speed Over Perfection**: Favor quick, useful suggestions over comprehensive but slow transformations.
 
 ---
 
@@ -30,8 +38,8 @@ You must adhere strictly to the following XML format. Any deviation will cause t
 3.  **Search and Replace**: Inside each \`<change>\` block, use \`<search>\` for the code to be replaced and \`<replace>\` for the new code.
 4.  **Exact Match**: The content in the \`<search>\` tag must exactly match a section of the current code, including all indentation and whitespace.
 5.  **CDATA Wrappers**: All code inside \`<search>\` and \`<replace>\` tags must be wrapped in \`<![CDATA[...]]>\`.
-6.  **Complete Blocks**: Always search for and replace complete logical code blocks (e.g., entire functions, classes, or multi-line statements). Do not target partial or single lines from a larger block.
-7.  **No Overlapping Changes**: Never generate multiple \`<change>\` blocks that modify the same or overlapping lines of code. If several edits are needed in one function, you must create a single \`<change>\` block that replaces the entire original function with its new version.`
+6.  **Minimal Changes**: Prefer small, targeted changes over large block replacements. Focus on the immediate area around the cursor first.
+7.  **No Overlapping Changes**: Never generate multiple \`<change>\` blocks that modify the same or overlapping lines of code.`
 
 		// Append any dynamic custom instructions if provided
 		return customInstructions ? `${basePrompt}\n\n---\n\n${customInstructions}` : basePrompt
@@ -55,14 +63,24 @@ You must adhere strictly to the following XML format. Any deviation will cause t
 
 ## Instructions
 
-1.  **Analyze Intent**: Your primary goal is to understand the user's intent from the \`Recent User Actions\`.
-	   * **If code was added or modified**, assume the user wants to build upon it. Your task is to complete the feature or propagate the change (like a rename).
-	   * **If code was deleted**, assume the user wants to remove functionality. Your task is to find and delete all related, now-obsolete code.
-	   * **If a cursor marker (<<<AUTOCOMPLETE_HERE>>>) is present**, focus on intelligently completing the code from that position, considering the surrounding context and typical coding patterns.
+1.  **Cursor-First Priority**: If a cursor marker (<<<AUTOCOMPLETE_HERE>>>) is present, your FIRST and PRIMARY suggestion must be the immediate completion at that exact position. This should be:
+	   * The most obvious next line(s) of code
+	   * A simple completion that makes syntactic sense
+	   * Something that can be processed and displayed instantly
+	   * Focused on the immediate context around the cursor
 
-2.  **Plan Changes**: Based on the intent, examine the \`Full Code\` and \`Active Diagnostics\`. The diagnostics are clues to what is now inconsistent or incomplete. Identify all code blocks that need to be added, removed, or updated.
+2.  **Analyze Intent**: Understand the user's intent from the \`Recent User Actions\`:
+	   * **If code was added or modified**, assume the user wants to build upon it with small, incremental additions
+	   * **If code was deleted**, assume the user wants to remove functionality with targeted deletions
+	   * **If typing/editing at cursor**, focus on intelligent autocompletion and immediate next steps
 
-3.  **Generate Response**: Produce a response containing only the XML-formatted changes. Do not include any explanations, apologies, or conversational text.
+3.  **Generate Fast, Small Changes**:
+	   * Start with the smallest, most immediate suggestion at the cursor
+	   * Prefer single-line completions, simple statements, or small code blocks
+	   * Avoid large refactors or comprehensive changes that take time to process
+	   * Each change should be independently useful and displayable
+
+4.  **Response Format**: Produce a response containing only the XML-formatted changes, ordered by priority (cursor-first). Do not include any explanations, apologies, or conversational text.
 `
 	}
 
@@ -148,7 +166,7 @@ You must adhere strictly to the following XML format. Any deviation will cause t
 
 ## Full Code
 
-**Note**: The cursor is currently at the position marked with \`${CURSOR_MARKER}\`. Focus on completing code from this position based on the context and user intent.
+**Note**: The cursor is currently at the position marked with \`${CURSOR_MARKER}\`. Your FIRST suggestion must be the immediate completion at this exact position. Prioritize small, fast completions that can be displayed instantly.
 
 \`\`\`${context.document.languageId}
 ${beforeCursor}${CURSOR_MARKER}${afterCursor}
