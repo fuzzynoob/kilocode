@@ -3,6 +3,7 @@ import * as vscode from "vscode"
 import { GhostStrategy } from "../GhostStrategy"
 import { GhostSuggestionContext, ASTContext } from "../types"
 import { MockTextDocument } from "../../mocking/MockTextDocument"
+import { StreamingParseResult } from "../GhostStreamingParser"
 
 // Create a mock Node class for testing
 class MockNode {
@@ -230,85 +231,162 @@ describe("GhostStrategy", () => {
 		vi.clearAllMocks()
 	})
 
-	describe("parseResponse", () => {
-		it("should handle search-and-replace XML format", async () => {
-			// Get the exact content from the mock document to ensure perfect matching
+	describe("streaming methods", () => {
+		it("should initialize streaming parser with context", () => {
+			const context: GhostSuggestionContext = {
+				document: mockDocument,
+			}
+
+			// Should not throw when initializing
+			expect(() => strategy.initializeStreamingParser(context)).not.toThrow()
+		})
+
+		it("should process streaming chunks and return parse results", () => {
+			const context: GhostSuggestionContext = {
+				document: mockDocument,
+			}
+
+			// Initialize the parser first
+			strategy.initializeStreamingParser(context)
+
+			// Process a chunk with partial XML
+			const partialChunk = "<change><search><![CDATA[function test()"
+			const result1 = strategy.processStreamingChunk(partialChunk)
+
+			// Should return result but no completed changes yet
+			expect(result1).toBeDefined()
+			expect(result1.suggestions).toBeDefined()
+			expect(result1.suggestions.hasSuggestions()).toBe(false)
+
+			// Process completing chunk
+			const completingChunk =
+				" {\n  return true;\n}]]></search><replace><![CDATA[function test() {\n  // Added comment\n  return true;\n}]]></replace></change>"
+			const result2 = strategy.processStreamingChunk(completingChunk)
+
+			// Should now have completed suggestions
+			expect(result2).toBeDefined()
+			expect(result2.suggestions).toBeDefined()
+			expect(result2.suggestions.hasSuggestions()).toBe(true)
+		})
+
+		it("should handle multiple streaming chunks with complete changes", () => {
+			const context: GhostSuggestionContext = {
+				document: mockDocument,
+			}
+
+			strategy.initializeStreamingParser(context)
+
+			// First complete change
 			const documentContent = mockDocument.getText()
-
-			// Create the search and replace response using the exact document content
-			const searchAndReplaceResponse = `<change><search><![CDATA[${documentContent}]]></search><replace><![CDATA[function test() {
-		// Added comment
-		return true;
+			const firstChange = `<change><search><![CDATA[${documentContent}]]></search><replace><![CDATA[function test() {
+	// First comment
+	return true;
 }]]></replace></change>`
+
+			const result1 = strategy.processStreamingChunk(firstChange)
+			expect(result1.suggestions.hasSuggestions()).toBe(true)
+
+			// Second complete change
+			const secondChange = `<change><search><![CDATA[function test() {
+	// First comment
+	return true;
+}]]></search><replace><![CDATA[function test() {
+	// First comment
+	// Second comment
+	return true;
+}]]></replace></change>`
+
+			const result2 = strategy.processStreamingChunk(secondChange)
+			expect(result2.suggestions.hasSuggestions()).toBe(true)
+		})
+
+		it("should reset streaming parser", () => {
 			const context: GhostSuggestionContext = {
 				document: mockDocument,
 			}
 
-			const result = await strategy.parseResponse(searchAndReplaceResponse, context)
-			expect(result.hasSuggestions()).toBe(true)
+			strategy.initializeStreamingParser(context)
+			strategy.processStreamingChunk("<change><search>")
 
-			// Verify that the suggestion file was created and has operations
-			const file = result.getFile(mockDocument.uri)
-			expect(file).toBeDefined()
-			expect(file!.isEmpty()).toBe(false)
+			// Buffer should have content
+			expect(strategy.getStreamingBuffer().length).toBeGreaterThan(0)
 
-			// Verify that operations were created
-			const operations = file!.getAllOperations()
-			expect(operations.length).toBeGreaterThan(0)
+			// Reset should clear the buffer
+			strategy.resetStreamingParser()
+			expect(strategy.getStreamingBuffer()).toBe("")
 		})
 
-		it("should return empty suggestions for unrecognized format", async () => {
-			const unrecognizedResponse = "This is just plain text without any recognized format"
+		it("should provide access to streaming buffer for debugging", () => {
 			const context: GhostSuggestionContext = {
 				document: mockDocument,
 			}
 
-			const result = await strategy.parseResponse(unrecognizedResponse, context)
-			expect(result.hasSuggestions()).toBe(false)
+			strategy.initializeStreamingParser(context)
+
+			// Initially empty
+			expect(strategy.getStreamingBuffer()).toBe("")
+
+			// Add some content
+			const chunk = "<change><search><![CDATA[test"
+			strategy.processStreamingChunk(chunk)
+
+			// Buffer should contain the chunk
+			expect(strategy.getStreamingBuffer()).toContain("test")
 		})
 
-		it("should find and replace search patterns with trailing whitespace", async () => {
-			// Test case to verify that the parseSearchAndReplaceFormat function
-			// correctly finds and replaces content when search patterns have trailing whitespace
-			const originalContent = `function App() {
-		const fibonnaci =
-
-		return (
-		  <div>Hello</div>
-		);
-}`
-
-			const testDocument = new MockTextDocument(vscode.Uri.parse("file:///App.tsx"), originalContent)
-
-			const searchAndReplaceResponse = `<change><search><![CDATA[  const fibonnaci =
-]]></search><replace><![CDATA[  const fibonacci = (n: number): number => {
-			 if (n <= 1) return n;
-			 return fibonacci(n - 1) + fibonacci(n - 2);
-		};
-]]></replace></change>`
-
+		it("should provide access to completed changes for debugging", () => {
 			const context: GhostSuggestionContext = {
-				document: testDocument,
+				document: mockDocument,
 			}
 
-			const result = await strategy.parseResponse(searchAndReplaceResponse, context)
-			expect(result.hasSuggestions()).toBe(true)
+			strategy.initializeStreamingParser(context)
 
-			// Verify that the search pattern was found and suggestions were created
-			const suggestionFile = result.getFile(testDocument.uri)
-			expect(suggestionFile).toBeDefined()
+			// Initially no completed changes
+			expect(strategy.getStreamingCompletedChanges()).toEqual([])
 
-			// Check that operations were created (this means the search pattern was found)
-			const operations = suggestionFile!.getAllOperations()
-			expect(operations.length).toBeGreaterThan(0)
+			// Process a complete change
+			const documentContent = mockDocument.getText()
+			const completeChange = `<change><search><![CDATA[${documentContent}]]></search><replace><![CDATA[function test() {
+	// Added comment
+	return true;
+}]]></replace></change>`
 
-			// Verify that some operations are additions (meaning replacement content was added)
-			const addOperations = operations.filter((op) => op.type === "+")
-			expect(addOperations.length).toBeGreaterThan(0)
+			strategy.processStreamingChunk(completeChange)
 
-			// Check that the replacement content includes the function definition
-			const hasFunction = addOperations.some((op) => op.content.includes("fibonacci = (n: number): number =>"))
-			expect(hasFunction).toBe(true)
+			// Should now have completed changes
+			const completedChanges = strategy.getStreamingCompletedChanges()
+			expect(completedChanges.length).toBeGreaterThan(0)
+		})
+	})
+
+	describe("prompt generation", () => {
+		it("should generate system prompt", () => {
+			const systemPrompt = strategy.getSystemPrompt()
+			expect(systemPrompt).toContain("Task Definition")
+			expect(systemPrompt).toContain("Required Output Format")
+			expect(systemPrompt).toContain("XML format")
+		})
+
+		it("should generate system prompt with custom instructions", () => {
+			const customInstructions = "Use TypeScript interfaces"
+			const systemPrompt = strategy.getSystemPrompt(customInstructions)
+			expect(systemPrompt).toContain("Task Definition")
+			expect(systemPrompt).toContain(customInstructions)
+		})
+
+		it("should generate suggestion prompt with context", () => {
+			const context: GhostSuggestionContext = {
+				document: mockDocument,
+				userInput: "Add a comment",
+				range: new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0)),
+			}
+
+			const suggestionPrompt = strategy.getSuggestionPrompt(context)
+			expect(suggestionPrompt).toContain("Context")
+			expect(suggestionPrompt).toContain("Full Code")
+			expect(suggestionPrompt).toContain("Instructions")
+			expect(suggestionPrompt).toContain("Add a comment")
+			expect(suggestionPrompt).toContain("<<<AUTOCOMPLETE_HERE>>>")
 		})
 	})
 })

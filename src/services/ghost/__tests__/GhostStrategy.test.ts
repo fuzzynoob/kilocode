@@ -113,52 +113,8 @@ describe("GhostStrategy", () => {
 		})
 	})
 
-	describe("findBestMatch", () => {
-		it("should find exact match", () => {
-			const content = "function test() {\n  return true;\n}"
-			const searchPattern = "return true;"
-
-			const index = strategy["findBestMatch"](content, searchPattern)
-			expect(index).toBe(20)
-		})
-
-		it("should handle empty inputs gracefully", () => {
-			expect(strategy["findBestMatch"]("", "test")).toBe(-1)
-			expect(strategy["findBestMatch"]("test", "")).toBe(-1)
-		})
-
-		it("should handle trailing newline differences", () => {
-			const content = "const x = 1;\n\nconst y = 2;"
-			const searchPattern = "const x = 1;\n"
-
-			const index = strategy["findBestMatch"](content, searchPattern)
-			expect(index).toBe(0)
-		})
-
-		it("should detect and reject partial matches", () => {
-			const content = "function test() {\n  return true;\n}"
-			// A partial pattern that ends with an opening brace without closing
-			const partialPattern = "function test() {\n"
-
-			// This pattern is actually found exactly in the content, so it returns the index
-			// The partial match detection is for patterns that are incomplete constructs
-			const index = strategy["findBestMatch"](content, partialPattern)
-			expect(index).toBe(0) // Found at the beginning
-
-			// Test a truly incomplete pattern that should be rejected
-			const incompletePattern = "function test() {" // Missing newline and doesn't match exactly
-			const index2 = strategy["findBestMatch"](content, incompletePattern)
-			expect(index2).toBe(0) // This is actually found as an exact match at position 0
-		})
-
-		it("should handle normalized whitespace matching", () => {
-			const content = "const x\t=\t1;\nconst y = 2;"
-			const searchPattern = "const x    =    1;"
-
-			const index = strategy["findBestMatch"](content, searchPattern)
-			expect(index).toBeGreaterThanOrEqual(0)
-		})
-	})
+	// Note: findBestMatch method was moved to GhostStreamingParser during streaming refactor
+	// These tests are now covered by GhostStreamingParser.test.ts
 
 	describe("getSuggestionPrompt", () => {
 		it("should combine all prompt sections correctly", () => {
