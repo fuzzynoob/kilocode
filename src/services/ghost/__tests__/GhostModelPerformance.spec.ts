@@ -31,11 +31,20 @@ describe("GhostModelPerformance", () => {
 		const model = new GhostModel(apiHandler)
 
 		const startTime = performance.now()
-		const response = await model.generateResponse(prompt.systemPrompt, prompt.suggestionPrompt)
+		let fullResponse = ""
+
+		const onChunk = (chunk: any) => {
+			if (chunk.type === "text") {
+				fullResponse += chunk.text
+			}
+		}
+
+		const usageInfo = await model.generateResponse(prompt.systemPrompt, prompt.suggestionPrompt, onChunk)
 		const endTime = performance.now()
 		const duration = endTime - startTime
-		expect(response).toBeDefined()
-		expect(response).toContain("```diff")
+
+		expect(usageInfo).toBeDefined()
+		expect(fullResponse).toContain("```diff")
 		console.log(`Response time: ${duration}ms`)
 	}
 

@@ -292,38 +292,103 @@ export class GhostProvider {
 		console.log("system", systemPrompt)
 		console.log("userprompt", userPrompt)
 
-		const { response, cost, inputTokens, outputTokens, cacheWriteTokens, cacheReadTokens } =
-			await this.model.generateResponse(systemPrompt, userPrompt)
+		const startTime = performance.now()
 
-		console.log("response", response)
+		// Initialize the streaming parser
+		this.strategy.initializeStreamingParser(context)
 
-		this.updateCostTracking(cost)
+		let hasShownFirstSuggestion = false
+		let totalCost = 0
+		let totalInputTokens = 0
+		let totalOutputTokens = 0
+		let totalCacheWriteTokens = 0
+		let totalCacheReadTokens = 0
 
-		TelemetryService.instance.captureEvent(TelemetryEventName.LLM_COMPLETION, {
-			taskId: this.taskId,
-			inputTokens,
-			outputTokens,
-			cacheWriteTokens,
-			cacheReadTokens,
-			cost,
-			service: "INLINE_ASSIST",
-		})
+		// Create streaming callback
+		const onChunk = (chunk: any) => {
+			if (this.isRequestCancelled) {
+				return
+			}
 
-		if (this.isRequestCancelled) {
-			return
+			if (chunk.type === "text") {
+				// Process the text chunk through our streaming parser
+				const parseResult = this.strategy.processStreamingChunk(chunk.text)
+
+				if (parseResult.hasNewSuggestions) {
+					// Update our suggestions with the new parsed results
+					this.suggestions = parseResult.suggestions
+
+					// If this is the first suggestion, show it immediately
+					if (!hasShownFirstSuggestion && this.suggestions.hasSuggestions()) {
+						hasShownFirstSuggestion = true
+						this.stopProcessing() // Stop the loading animation
+						this.selectClosestSuggestion()
+						void this.render() // Render asynchronously to not block streaming
+
+						const firstSuggestionTime = performance.now()
+						console.log(`First suggestion shown after ${(firstSuggestionTime - startTime).toFixed(2)} ms`)
+					} else if (hasShownFirstSuggestion) {
+						// Update existing suggestions
+						this.selectClosestSuggestion()
+						void this.render() // Update UI asynchronously
+					}
+				}
+
+				// If the response appears complete, finalize
+				if (parseResult.isComplete && hasShownFirstSuggestion) {
+					this.selectClosestSuggestion()
+					void this.render()
+				}
+			}
 		}
 
-		// First parse the response into edit operations
-		this.suggestions = await this.strategy.parseResponse(response, context)
-		if (this.isRequestCancelled) {
-			this.suggestions.clear()
+		try {
+			// Start streaming generation
+			const usageInfo = await this.model.generateResponse(systemPrompt, userPrompt, onChunk, startTime)
+
+			const endTime = performance.now()
+			console.log(`Total response time: ${(endTime - startTime).toFixed(2)} ms`)
+
+			// Update cost tracking
+			totalCost = usageInfo.cost
+			totalInputTokens = usageInfo.inputTokens
+			totalOutputTokens = usageInfo.outputTokens
+			totalCacheWriteTokens = usageInfo.cacheWriteTokens
+			totalCacheReadTokens = usageInfo.cacheReadTokens
+
+			this.updateCostTracking(totalCost)
+
+			// Send telemetry
+			TelemetryService.instance.captureEvent(TelemetryEventName.LLM_COMPLETION, {
+				taskId: this.taskId,
+				inputTokens: totalInputTokens,
+				outputTokens: totalOutputTokens,
+				cacheWriteTokens: totalCacheWriteTokens,
+				cacheReadTokens: totalCacheReadTokens,
+				cost: totalCost,
+				service: "INLINE_ASSIST",
+			})
+
+			if (this.isRequestCancelled) {
+				this.suggestions.clear()
+				await this.render()
+				return
+			}
+
+			// If we never showed any suggestions, there might have been an issue
+			if (!hasShownFirstSuggestion) {
+				console.warn("No suggestions were generated during streaming")
+				this.stopProcessing()
+			}
+
+			// Final render to ensure everything is up to date
+			this.selectClosestSuggestion()
 			await this.render()
-			return
+		} catch (error) {
+			console.error("Error in streaming generation:", error)
+			this.stopProcessing()
+			throw error
 		}
-		// Generate placeholder for show the suggestions
-		this.stopProcessing()
-		this.selectClosestSuggestion()
-		await this.render()
 	}
 
 	private async render() {
@@ -603,6 +668,8 @@ export class GhostProvider {
 		if (this.autoTriggerTimer) {
 			this.clearAutoTriggerTimer()
 		}
+		// Reset streaming parser when cancelling
+		this.strategy.resetStreamingParser()
 	}
 
 	/**

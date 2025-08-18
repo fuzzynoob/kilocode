@@ -3,6 +3,7 @@ import { ApiHandler, buildApiHandler } from "../../api"
 import { ContextProxy } from "../../core/config/ContextProxy"
 import { ProviderSettingsManager } from "../../core/config/ProviderSettingsManager"
 import { OpenRouterHandler } from "../../api/providers"
+import { ApiStreamChunk } from "../../api/transform/stream"
 
 export class GhostModel {
 	private apiHandler: ApiHandler | null = null
@@ -40,7 +41,21 @@ export class GhostModel {
 		this.loaded = true
 	}
 
-	public async generateResponse(systemPrompt: string, userPrompt: string) {
+	/**
+	 * Generate response with streaming callback support
+	 */
+	public async generateResponse(
+		systemPrompt: string,
+		userPrompt: string,
+		onChunk: (chunk: ApiStreamChunk) => void,
+		startTime?: number,
+	): Promise<{
+		cost: number
+		inputTokens: number
+		outputTokens: number
+		cacheWriteTokens: number
+		cacheReadTokens: number
+	}> {
 		if (!this.apiHandler) {
 			console.error("API handler is not initialized")
 			throw new Error("API handler is not initialized. Please check your configuration.")
@@ -52,17 +67,25 @@ export class GhostModel {
 			{ role: "user", content: [{ type: "text", text: userPrompt }] },
 		])
 
-		let response: string = ""
 		let cost = 0
 		let inputTokens = 0
 		let outputTokens = 0
 		let cacheReadTokens = 0
 		let cacheWriteTokens = 0
+
 		try {
 			for await (const chunk of stream) {
-				if (chunk.type === "text") {
-					response += chunk.text
-				} else if (chunk.type === "usage") {
+				if (startTime) {
+					const elapsedTime = performance.now() - startTime
+					console.log(`Chunk received after ${elapsedTime.toFixed(2)} ms`)
+					console.log("Chunk data:", chunk)
+				}
+
+				// Call the callback with each chunk
+				onChunk(chunk)
+
+				// Track usage information
+				if (chunk.type === "usage") {
 					cost = chunk.totalCost ?? 0
 					cacheReadTokens = chunk.cacheReadTokens ?? 0
 					cacheWriteTokens = chunk.cacheWriteTokens ?? 0
@@ -72,11 +95,10 @@ export class GhostModel {
 			}
 		} catch (error) {
 			console.error("Error streaming completion:", error)
-			response = ""
+			throw error
 		}
 
 		return {
-			response,
 			cost,
 			inputTokens,
 			outputTokens,
