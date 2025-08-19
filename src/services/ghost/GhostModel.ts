@@ -5,6 +5,11 @@ import { ProviderSettingsManager } from "../../core/config/ProviderSettingsManag
 import { OpenRouterHandler } from "../../api/providers"
 import { ApiStreamChunk } from "../../api/transform/stream"
 
+const KILOCODE_DEFAULT_MODEL = "mistralai/codestral-2508"
+const MISTRAL_DEFAULT_MODEL = "codestral-latest"
+
+const SUPPORTED_DEFAULT_PROVIDERS = ["mistral", "kilocode", "openrouter"]
+
 export class GhostModel {
 	private apiHandler: ApiHandler | null = null
 	private apiConfigId: string | null = null
@@ -22,22 +27,74 @@ export class GhostModel {
 	}
 
 	public async reload(settings: GhostServiceSettings, providerSettingsManager: ProviderSettingsManager) {
-		this.apiConfigId = settings?.apiConfigId || null
-		const defaultApiConfigId = ContextProxy.instance?.getValues?.()?.currentApiConfigName || ""
+		let enableCustomProvider = settings?.enableCustomProvider || false
 
-		const profileQuery = this.apiConfigId
-			? {
+		if (!enableCustomProvider) {
+			const profiles = await providerSettingsManager.listConfig()
+			const validProfiles = profiles
+				.filter((x) => x.apiProvider && SUPPORTED_DEFAULT_PROVIDERS.includes(x.apiProvider))
+				.sort((a, b) => {
+					if (!a.apiProvider) {
+						return 1 // Place undefined providers at the end
+					}
+					if (!b.apiProvider) {
+						return -1 // Place undefined providers at the end
+					}
+					return (
+						SUPPORTED_DEFAULT_PROVIDERS.indexOf(a.apiProvider) -
+						SUPPORTED_DEFAULT_PROVIDERS.indexOf(b.apiProvider)
+					)
+				})
+
+			const selectedProfile = validProfiles[0] || null
+			if (selectedProfile) {
+				this.apiConfigId = selectedProfile.id
+				const profile = await providerSettingsManager.getProfile({
 					id: this.apiConfigId,
+				})
+				const profileProvider = profile.apiProvider
+				let modelDefinition = {}
+				if (profileProvider === "kilocode") {
+					modelDefinition = {
+						kilocodeModel: KILOCODE_DEFAULT_MODEL,
+					}
+				} else if (profileProvider === "openrouter") {
+					modelDefinition = {
+						openRouterModelId: KILOCODE_DEFAULT_MODEL,
+					}
+				} else if (profileProvider === "mistral") {
+					modelDefinition = {
+						apiModelId: MISTRAL_DEFAULT_MODEL,
+					}
 				}
-			: {
-					name: defaultApiConfigId,
-				}
+				this.apiHandler = buildApiHandler({
+					...profile,
+					...modelDefinition,
+				})
+			} else {
+				enableCustomProvider = true
+			}
+		}
 
-		const profile = await providerSettingsManager.getProfile(profileQuery)
-		this.apiHandler = buildApiHandler(profile)
+		if (enableCustomProvider) {
+			this.apiConfigId = settings?.apiConfigId || null
+			const defaultApiConfigId = ContextProxy.instance?.getValues?.()?.currentApiConfigName || ""
+			const profileQuery = this.apiConfigId
+				? {
+						id: this.apiConfigId,
+					}
+				: {
+						name: defaultApiConfigId,
+					}
+
+			const profile = await providerSettingsManager.getProfile(profileQuery)
+			this.apiHandler = buildApiHandler(profile)
+		}
+
 		if (this.apiHandler instanceof OpenRouterHandler) {
 			await this.apiHandler.fetchModel()
 		}
+
 		this.loaded = true
 	}
 
