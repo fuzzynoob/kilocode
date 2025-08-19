@@ -8,7 +8,6 @@ import { GhostWorkspaceEdit } from "./GhostWorkspaceEdit"
 import { GhostDecorations } from "./GhostDecorations"
 import { GhostSuggestionContext } from "./types"
 import { GhostStatusBar } from "./GhostStatusBar"
-import { addCustomInstructions } from "../../core/prompts/sections/custom-instructions"
 import { getWorkspacePath } from "../../utils/path"
 import { GhostSuggestionsState } from "./GhostSuggestions"
 import { GhostCodeActionProvider } from "./GhostCodeActionProvider"
@@ -64,7 +63,7 @@ export class GhostProvider {
 		// Register Internal Components
 		this.decorations = new GhostDecorations()
 		this.documentStore = new GhostDocumentStore()
-		this.strategy = new GhostStrategy()
+		this.strategy = new GhostStrategy(true)
 		this.workspaceEdit = new GhostWorkspaceEdit()
 		this.providerSettingsManager = new ProviderSettingsManager(context)
 		this.model = new GhostModel()
@@ -274,11 +273,7 @@ export class GhostProvider {
 		this.isRequestCancelled = false
 
 		const context = await this.ghostContext.generate(initialContext)
-		// Load custom instructions
-		const workspacePath = getWorkspacePath()
-		const customInstructions = await addCustomInstructions("", "", workspacePath, "ghost")
-
-		const systemPrompt = this.strategy.getSystemPrompt(customInstructions)
+		const systemPrompt = this.strategy.getSystemPrompt(context)
 		const userPrompt = this.strategy.getSuggestionPrompt(context)
 		if (this.isRequestCancelled) {
 			return
@@ -292,18 +287,16 @@ export class GhostProvider {
 		console.log("system", systemPrompt)
 		console.log("userprompt", userPrompt)
 
-		const startTime = performance.now()
-
 		// Initialize the streaming parser
 		this.strategy.initializeStreamingParser(context)
 
 		let hasShownFirstSuggestion = false
-		let firstChunkReceived = false
 		let totalCost = 0
 		let totalInputTokens = 0
 		let totalOutputTokens = 0
 		let totalCacheWriteTokens = 0
 		let totalCacheReadTokens = 0
+		let response = ""
 
 		// Create streaming callback
 		const onChunk = (chunk: any) => {
@@ -311,13 +304,9 @@ export class GhostProvider {
 				return
 			}
 
-			if (!firstChunkReceived) {
-				firstChunkReceived = true
-				const firstChunkTime = performance.now()
-				console.log(`First chunk received after ${(firstChunkTime - startTime).toFixed(2)} ms`)
-			}
-
 			if (chunk.type === "text") {
+				response += chunk.text
+
 				// Process the text chunk through our streaming parser
 				const parseResult = this.strategy.processStreamingChunk(chunk.text)
 
@@ -331,9 +320,6 @@ export class GhostProvider {
 						this.stopProcessing() // Stop the loading animation
 						this.selectClosestSuggestion()
 						void this.render() // Render asynchronously to not block streaming
-
-						const firstSuggestionTime = performance.now()
-						console.log(`First suggestion shown after ${(firstSuggestionTime - startTime).toFixed(2)} ms`)
 					} else if (hasShownFirstSuggestion) {
 						// Update existing suggestions
 						this.selectClosestSuggestion()
@@ -353,8 +339,7 @@ export class GhostProvider {
 			// Start streaming generation
 			const usageInfo = await this.model.generateResponse(systemPrompt, userPrompt, onChunk)
 
-			const endTime = performance.now()
-			console.log(`Total response time: ${(endTime - startTime).toFixed(2)} ms`)
+			console.log("response", response)
 
 			// Update cost tracking
 			totalCost = usageInfo.cost

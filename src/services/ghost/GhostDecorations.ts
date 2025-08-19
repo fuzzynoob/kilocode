@@ -17,8 +17,8 @@ const ADDITION_DECORATION_OPTIONS: vscode.DecorationRenderOptions = {
 
 const DELETION_DECORATION_OPTIONS: vscode.DecorationRenderOptions = {
 	isWholeLine: false,
-	color: new vscode.ThemeColor("editor.background"),
-	backgroundColor: new vscode.ThemeColor("editorGutter.deletedBackground"),
+	border: "1px solid",
+	borderColor: new vscode.ThemeColor("editorGutter.deletedBackground"),
 	overviewRulerColor: new vscode.ThemeColor("editorGutter.deletedBackground"),
 	overviewRulerLane: vscode.OverviewRulerLane.Right,
 }

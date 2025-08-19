@@ -120,21 +120,98 @@ describe("GhostStreamingParser", () => {
 			expect(result.isComplete).toBe(false)
 		})
 
-		it("should handle cursor marker removal", () => {
+		it("should handle cursor marker correctly", () => {
 			const changeWithCursor = `<change><search><![CDATA[function test() {
 	<<<AUTOCOMPLETE_HERE>>>return true;
 }]]></search><replace><![CDATA[function test() {
-	// Added comment
+	// Added comment<<<AUTOCOMPLETE_HERE>>>
 	return true;
 }]]></replace></change>`
 
 			const result = parser.processChunk(changeWithCursor)
 
 			expect(result.hasNewSuggestions).toBe(true)
-			// Verify cursor marker was removed from the parsed changes
+			// Verify cursor marker is preserved in search content for matching
 			const changes = parser.getCompletedChanges()
-			expect(changes[0].search).not.toContain("<<<AUTOCOMPLETE_HERE>>>")
-			expect(changes[0].replace).not.toContain("<<<AUTOCOMPLETE_HERE>>>")
+			expect(changes[0].search).toContain("<<<AUTOCOMPLETE_HERE>>>") // Should preserve in search for matching
+			expect(changes[0].replace).toContain("<<<AUTOCOMPLETE_HERE>>>") // Should preserve in replace
+			expect(changes[0].cursorPosition).toBeDefined() // Should have cursor position info
+		})
+
+		it("should extract cursor position correctly", () => {
+			const changeWithCursor = `<change><search><![CDATA[return true;]]></search><replace><![CDATA[// Comment here<<<AUTOCOMPLETE_HERE>>>
+	return false;]]></replace></change>`
+
+			const result = parser.processChunk(changeWithCursor)
+
+			expect(result.hasNewSuggestions).toBe(true)
+			const changes = parser.getCompletedChanges()
+			expect(changes[0].cursorPosition).toBe(15) // Position after "// Comment here"
+		})
+
+		it("should handle cursor marker in search content for matching", () => {
+			// Mock document WITHOUT cursor marker (parser should add it)
+			const mockDocumentWithoutCursor: any = {
+				uri: { toString: () => "/test/file.ts", fsPath: "/test/file.ts" },
+				getText: () => `function test() {
+	return true;
+}`,
+				languageId: "typescript",
+				offsetAt: (position: any) => 20, // Mock cursor position
+			}
+
+			const mockRange: any = {
+				start: { line: 1, character: 1 },
+				end: { line: 1, character: 1 },
+				isEmpty: true,
+				isSingleLine: true,
+			}
+
+			const contextWithCursor = {
+				document: mockDocumentWithoutCursor,
+				range: mockRange,
+			}
+
+			parser.initialize(contextWithCursor)
+
+			const changeWithCursor = `<change><search><![CDATA[<<<AUTOCOMPLETE_HERE>>>]]></search><replace><![CDATA[// New function
+function fibonacci(n: number): number {
+		if (n <= 1) return n;
+		return fibonacci(n - 1) + fibonacci(n - 2);
+}]]></replace></change>`
+
+			const result = parser.processChunk(changeWithCursor)
+
+			expect(result.hasNewSuggestions).toBe(true)
+			expect(result.suggestions.hasSuggestions()).toBe(true)
+		})
+
+		it("should handle document that already contains cursor marker", () => {
+			// Mock document that already contains cursor marker
+			const mockDocumentWithCursor: any = {
+				uri: { toString: () => "/test/file.ts", fsPath: "/test/file.ts" },
+				getText: () => `function test() {
+	<<<AUTOCOMPLETE_HERE>>>
+}`,
+				languageId: "typescript",
+			}
+
+			const contextWithCursor = {
+				document: mockDocumentWithCursor,
+			}
+
+			parser.initialize(contextWithCursor)
+
+			const changeWithCursor = `<change><search><![CDATA[<<<AUTOCOMPLETE_HERE>>>]]></search><replace><![CDATA[// New function
+function fibonacci(n: number): number {
+		if (n <= 1) return n;
+		return fibonacci(n - 1) + fibonacci(n - 2);
+}]]></replace></change>`
+
+			const result = parser.processChunk(changeWithCursor)
+
+			expect(result.hasNewSuggestions).toBe(true)
+			expect(result.suggestions.hasSuggestions()).toBe(true)
 		})
 
 		it("should handle malformed XML gracefully", () => {

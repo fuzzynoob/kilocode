@@ -220,6 +220,8 @@ class GhostSuggestionFile {
 			return
 		}
 
+		console.log("GROUPS", this.groups)
+
 		let bestGroup: { groupIndex: number; distance: number } | null = null
 		const selectionStartLine = selection.start.line
 		const selectionEndLine = selection.end.line
@@ -242,6 +244,9 @@ class GhostSuggestionFile {
 			// Check if this group is better than current best
 			if (bestGroup === null || distance < bestGroup.distance) {
 				bestGroup = { groupIndex, distance }
+			}
+			if (distance === 0) {
+				break
 			}
 		}
 

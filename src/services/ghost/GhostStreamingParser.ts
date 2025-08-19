@@ -15,6 +15,7 @@ export interface StreamingParseResult {
 export interface ParsedChange {
 	search: string
 	replace: string
+	cursorPosition?: number // Offset within replace content where cursor should be positioned
 }
 
 /**
@@ -94,12 +95,16 @@ export class GhostStreamingParser {
 		let lastMatchEnd = 0
 
 		while ((match = changeRegex.exec(searchText)) !== null) {
-			const searchContent = match[1].replaceAll(CURSOR_MARKER, "")
-			const replaceContent = match[2].replaceAll(CURSOR_MARKER, "")
+			// Preserve cursor marker in search content (LLM includes it when it sees it in document)
+			const searchContent = match[1]
+			// Extract cursor position from replace content
+			const replaceContent = match[2]
+			const cursorPosition = this.extractCursorPosition(replaceContent)
 
 			newChanges.push({
 				search: searchContent,
 				replace: replaceContent,
+				cursorPosition,
 			})
 
 			lastMatchEnd = match.index + match[0].length
@@ -153,12 +158,24 @@ export class GhostStreamingParser {
 
 		const document = this.context.document
 		const currentContent = document.getText()
-		let modifiedContent = currentContent
 
-		// Filter out cursor marker from changes
+		// Add cursor marker to document content if it's not already there
+		// This ensures that when LLM searches for <<<AUTOCOMPLETE_HERE>>>, it can find it
+		let modifiedContent = currentContent
+		const needsCursorMarker =
+			changes.some((change) => change.search.includes(CURSOR_MARKER)) && !currentContent.includes(CURSOR_MARKER)
+		if (needsCursorMarker && this.context.range) {
+			// Add cursor marker at the specified range position
+			const cursorOffset = document.offsetAt(this.context.range.start)
+			modifiedContent =
+				currentContent.substring(0, cursorOffset) + CURSOR_MARKER + currentContent.substring(cursorOffset)
+		}
+
+		// Process changes: preserve search content as-is, clean replace content for application
 		const filteredChanges = changes.map((change) => ({
-			search: change.search.replaceAll(CURSOR_MARKER, ""),
-			replace: change.replace.replaceAll(CURSOR_MARKER, ""),
+			search: change.search, // Keep cursor markers for matching against document
+			replace: this.removeCursorMarker(change.replace), // Clean for content application
+			cursorPosition: change.cursorPosition,
 		}))
 
 		// Apply changes in reverse order to maintain line numbers
@@ -167,6 +184,7 @@ export class GhostStreamingParser {
 			replaceContent: string
 			startIndex: number
 			endIndex: number
+			cursorPosition?: number
 		}> = []
 
 		for (const change of filteredChanges) {
@@ -214,6 +232,7 @@ export class GhostStreamingParser {
 					replaceContent: adjustedReplaceContent,
 					startIndex: searchIndex,
 					endIndex: endIndex,
+					cursorPosition: change.cursorPosition, // Preserve cursor position info
 				})
 			}
 		}
@@ -227,6 +246,11 @@ export class GhostStreamingParser {
 				modifiedContent.substring(0, change.startIndex) +
 				change.replaceContent +
 				modifiedContent.substring(change.endIndex)
+		}
+
+		// Remove cursor marker from the final content if we added it
+		if (needsCursorMarker) {
+			modifiedContent = this.removeCursorMarker(modifiedContent)
 		}
 
 		// Generate diff between original and modified content
@@ -288,7 +312,7 @@ export class GhostStreamingParser {
 	}
 
 	/**
-	 * Find the best match for search content in the document, handling whitespace differences
+	 * Find the best match for search content in the document, handling whitespace differences and cursor markers
 	 * This is a simplified version of the method from GhostStrategy
 	 */
 	private findBestMatch(content: string, searchPattern: string): number {
@@ -301,6 +325,18 @@ export class GhostStreamingParser {
 		let index = content.indexOf(searchPattern)
 		if (index !== -1) {
 			return index
+		}
+
+		// If search pattern contains cursor marker, try matching with the document that should also contain it
+		if (searchPattern.includes(CURSOR_MARKER)) {
+			// The document should contain the cursor marker, so exact match should work
+			// If it doesn't work, the document might not have the cursor marker
+			// Try matching without cursor marker as fallback
+			const searchWithoutMarker = searchPattern.replaceAll(CURSOR_MARKER, "")
+			index = content.indexOf(searchWithoutMarker)
+			if (index !== -1) {
+				return index
+			}
 		}
 
 		// Handle the case where search pattern has trailing whitespace that might not match exactly
@@ -386,6 +422,21 @@ export class GhostStreamingParser {
 		}
 
 		return originalIndex
+	}
+
+	/**
+	 * Extract cursor position from content containing cursor marker
+	 */
+	private extractCursorPosition(content: string): number | undefined {
+		const markerIndex = content.indexOf(CURSOR_MARKER)
+		return markerIndex !== -1 ? markerIndex : undefined
+	}
+
+	/**
+	 * Remove cursor marker from content and return clean content
+	 */
+	private removeCursorMarker(content: string): string {
+		return content.replaceAll(CURSOR_MARKER, "")
 	}
 
 	/**

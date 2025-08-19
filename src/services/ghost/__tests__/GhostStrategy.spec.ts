@@ -361,17 +361,12 @@ describe("GhostStrategy", () => {
 
 	describe("prompt generation", () => {
 		it("should generate system prompt", () => {
-			const systemPrompt = strategy.getSystemPrompt()
-			expect(systemPrompt).toContain("Task Definition")
-			expect(systemPrompt).toContain("Required Output Format")
-			expect(systemPrompt).toContain("XML format")
-		})
-
-		it("should generate system prompt with custom instructions", () => {
-			const customInstructions = "Use TypeScript interfaces"
-			const systemPrompt = strategy.getSystemPrompt(customInstructions)
-			expect(systemPrompt).toContain("Task Definition")
-			expect(systemPrompt).toContain(customInstructions)
+			const context: GhostSuggestionContext = {
+				document: mockDocument,
+			}
+			const systemPrompt = strategy.getSystemPrompt(context)
+			expect(systemPrompt).toContain("CRITICAL OUTPUT FORMAT")
+			expect(systemPrompt).toContain("XML-formatted changes")
 		})
 
 		it("should generate suggestion prompt with context", () => {
@@ -382,9 +377,6 @@ describe("GhostStrategy", () => {
 			}
 
 			const suggestionPrompt = strategy.getSuggestionPrompt(context)
-			expect(suggestionPrompt).toContain("Context")
-			expect(suggestionPrompt).toContain("Full Code")
-			expect(suggestionPrompt).toContain("Instructions")
 			expect(suggestionPrompt).toContain("Add a comment")
 			expect(suggestionPrompt).toContain("<<<AUTOCOMPLETE_HERE>>>")
 		})

@@ -16,14 +16,18 @@ describe("GhostModelPerformance", () => {
 	const generatePrompt = (userInput: string) => {
 		const strategy = new GhostStrategy()
 		const mockWorkspace = new MockWorkspace()
-		const systemPrompt = strategy.getSystemPrompt()
 
 		const testUri = vscode.Uri.parse("file:///example.ts")
 		const document = mockWorkspace.addDocument(testUri, "")
-		const suggestionPrompt = strategy.getSuggestionPrompt({
+
+		const context = {
 			userInput,
 			document: document,
-		})
+		}
+
+		const systemPrompt = strategy.getSystemPrompt(context)
+		const suggestionPrompt = strategy.getSuggestionPrompt(context)
+
 		return { systemPrompt, suggestionPrompt }
 	}
 
