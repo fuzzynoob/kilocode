@@ -27,7 +27,7 @@ const EDIT_DECORATION_OPTIONS: vscode.DecorationRenderOptions = {
 	after: {
 		// CSS INJECT
 		textDecoration:
-			"none; display: block; position: absolute; top: 100%; left: 20px; width: max-content; z-index: 100; box-shadow: 0 1px 3px rgba(255, 255, 255, 0.12), 0 1px 2px rgba(255, 255, 255, 0.24); padding: 0.2em;",
+			"none; display: block; position: absolute; top: 100%; left: 20px; width: max-content; z-index: 10000; box-shadow: 0 1px 3px rgba(255, 255, 255, 0.12), 0 1px 2px rgba(255, 255, 255, 0.24); padding: 0.2em;",
 		color: new vscode.ThemeColor("editor.foreground"),
 		backgroundColor: new vscode.ThemeColor("editor.background"),
 		border: "1px solid",
@@ -127,7 +127,7 @@ export class GhostDecorations {
 
 		console.log(content)
 
-		return `none; display: block; position: absolute; top: 0px; left: 0px; width: max-content; z-index: 100; white-space: pre-wrap; content: "${filteredContent}"; box-shadow: 0 1px 3px rgba(255, 255, 255, 0.12), 0 1px 2px rgba(255, 255, 255, 0.24); padding: 0.2em;`
+		return `none; display: block; position: absolute; top: 0px; left: 0px; width: max-content; z-index: 10000; white-space: pre-wrap; content: "${filteredContent}"; box-shadow: 0 1px 3px rgba(255, 255, 255, 0.12), 0 1px 2px rgba(255, 255, 255, 0.24); padding: 0.2em;`
 	}
 
 	private displayAdditionsOperationGroup = (editor: vscode.TextEditor, group: GhostSuggestionEditOperation[]) => {

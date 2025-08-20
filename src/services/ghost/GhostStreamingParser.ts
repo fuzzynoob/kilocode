@@ -58,18 +58,36 @@ export class GhostStreamingParser {
 		// Add chunk to buffer
 		this.buffer += chunk
 
-		// Extract any newly completed changes
+		// Extract any newly completed changes from the current buffer
 		const newChanges = this.extractCompletedChanges()
-		const hasNewSuggestions = newChanges.length > 0
+		console.log("newChanges", newChanges)
+
+		let hasNewSuggestions = newChanges.length > 0
 
 		// Add new changes to our completed list
 		this.completedChanges.push(...newChanges)
 
+		// Check if the response appears complete
+		let isComplete = this.isResponseComplete()
+
+		// Apply very conservative sanitization only for the specific case from user feedback
+		// Only fix missing </change> tag when we have complete search/replace pairs
+		if (this.completedChanges.length === 0 && this.buffer.trim().length > 0) {
+			const sanitizedBuffer = this.sanitizeXMLConservative(this.buffer)
+			if (sanitizedBuffer !== this.buffer) {
+				// Re-process with sanitized buffer
+				this.buffer = sanitizedBuffer
+				const sanitizedChanges = this.extractCompletedChanges()
+				if (sanitizedChanges.length > 0) {
+					this.completedChanges.push(...sanitizedChanges)
+					hasNewSuggestions = true
+					isComplete = this.isResponseComplete() // Re-check completion after sanitization
+				}
+			}
+		}
+
 		// Generate suggestions from all completed changes
 		const suggestions = this.generateSuggestions(this.completedChanges)
-
-		// Check if the response appears complete
-		const isComplete = this.isResponseComplete()
 
 		return {
 			suggestions,
@@ -86,6 +104,8 @@ export class GhostStreamingParser {
 
 		// Look for complete <change> blocks starting from where we left off
 		const searchText = this.buffer.substring(this.lastProcessedIndex)
+
+		console.log("SEarch Text", searchText)
 
 		// Updated regex to handle both single-line XML format and traditional format with whitespace
 		const changeRegex =
@@ -321,22 +341,13 @@ export class GhostStreamingParser {
 			return -1
 		}
 
+		console.log("findBestMatch - content", content)
+		console.log("findBestMatch - searchPattern", searchPattern)
+
 		// First try exact match
 		let index = content.indexOf(searchPattern)
 		if (index !== -1) {
 			return index
-		}
-
-		// If search pattern contains cursor marker, try matching with the document that should also contain it
-		if (searchPattern.includes(CURSOR_MARKER)) {
-			// The document should contain the cursor marker, so exact match should work
-			// If it doesn't work, the document might not have the cursor marker
-			// Try matching without cursor marker as fallback
-			const searchWithoutMarker = searchPattern.replaceAll(CURSOR_MARKER, "")
-			index = content.indexOf(searchWithoutMarker)
-			if (index !== -1) {
-				return index
-			}
 		}
 
 		// Handle the case where search pattern has trailing whitespace that might not match exactly
@@ -350,6 +361,18 @@ export class GhostStreamingParser {
 				if (afterMatchIndex >= content.length || content[afterMatchIndex] === "\n") {
 					return index
 				}
+			}
+		}
+
+		// If search pattern contains cursor marker, try matching with the document that should also contain it
+		if (searchPattern.includes(CURSOR_MARKER)) {
+			// The document should contain the cursor marker, so exact match should work
+			// If it doesn't work, the document might not have the cursor marker
+			// Try matching without cursor marker as fallback
+			const searchWithoutMarker = searchPattern.replaceAll(CURSOR_MARKER, "")
+			index = content.indexOf(searchWithoutMarker)
+			if (index !== -1) {
+				return index
 			}
 		}
 
@@ -381,6 +404,7 @@ export class GhostStreamingParser {
 			}
 		}
 
+		console.log("NO MATCH FOUND")
 		return -1 // No match found
 	}
 
@@ -451,5 +475,36 @@ export class GhostStreamingParser {
 	 */
 	public getCompletedChanges(): ParsedChange[] {
 		return [...this.completedChanges]
+	}
+
+	/**
+	 * Conservative XML sanitization - only fixes the specific case from user feedback
+	 */
+	private sanitizeXMLConservative(buffer: string): string {
+		let sanitized = buffer
+
+		// Only fix the specific case: missing </change> tag when we have complete search/replace pairs
+		const changeOpenCount = (sanitized.match(/<change>/g) || []).length
+		const changeCloseCount = (sanitized.match(/<\/change>/g) || []).length
+
+		// Check if we have an incomplete </change> tag (like "</change" without the final ">")
+		const incompleteChangeClose = sanitized.includes("</change") && !sanitized.includes("</change>")
+
+		// Only apply if we have exactly one missing </change> tag AND no incomplete closing tag
+		if (changeOpenCount === 1 && changeCloseCount === 0 && !incompleteChangeClose) {
+			const searchCloseCount = (sanitized.match(/<\/search>/g) || []).length
+			const replaceCloseCount = (sanitized.match(/<\/replace>/g) || []).length
+
+			// Only fix if we have complete search/replace pairs and the buffer doesn't end with incomplete XML
+			if (searchCloseCount === 1 && replaceCloseCount === 1) {
+				// Make sure we're not in the middle of streaming an incomplete tag
+				const trimmed = sanitized.trim()
+				if (!trimmed.endsWith("</change") && !trimmed.endsWith("<")) {
+					sanitized += "</change>"
+				}
+			}
+		}
+
+		return sanitized
 	}
 }

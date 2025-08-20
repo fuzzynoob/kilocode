@@ -53,14 +53,28 @@ You must respond with XML-formatted changes ONLY. No explanations or text outsid
 
 Format: <change><search><![CDATA[exact_code]]></search><replace><![CDATA[new_code]]></replace></change>
 
-Rules:
-- Single-line XML response (no line breaks between tags)
+MANDATORY XML STRUCTURE RULES:
+- Every <change> tag MUST have a closing </change> tag
+- Every <search> tag MUST have a closing </search> tag
+- Every <replace> tag MUST have a closing </replace> tag
+- Every <![CDATA[ MUST have a closing ]]>
+- XML tags should be properly formatted and nested
 - Multiple <change> blocks allowed for different modifications
-- Search content must match EXACTLY (including whitespace and indentation)
+
+CONTENT MATCHING RULES:
+- Search content must match EXACTLY (including whitespace, indentation, and line breaks)
 - Use CDATA wrappers for all code content
+- Preserve all line breaks and formatting within CDATA sections
 - Never generate overlapping changes
 - The <search> block must contain exact text that exists in the code
-- If you can't find exact match, don't generate that change`
+- If you can't find exact match, don't generate that change
+
+EXAMPLE:
+<change><search><![CDATA[function example() {
+	 // old code
+}]]></search><replace><![CDATA[function example() {
+	 // new code
+}]]></replace></change>`
 	}
 
 	/**
