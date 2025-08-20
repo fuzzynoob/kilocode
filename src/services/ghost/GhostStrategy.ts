@@ -62,6 +62,13 @@ export class GhostStrategy {
 	}
 
 	/**
+	 * Finish the streaming parser and apply sanitization if needed
+	 */
+	public finishStreamingParser(): StreamingParseResult {
+		return this.streamingParser.finishStream()
+	}
+
+	/**
 	 * Get the current buffer content from the streaming parser (for debugging)
 	 */
 	public getStreamingBuffer(): string {

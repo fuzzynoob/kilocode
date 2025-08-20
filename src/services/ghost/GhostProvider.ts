@@ -367,6 +367,22 @@ export class GhostProvider {
 				return
 			}
 
+			// Finish the streaming parser to apply sanitization if needed
+			const finalParseResult = this.strategy.finishStreamingParser()
+			if (finalParseResult.hasNewSuggestions && !hasShownFirstSuggestion) {
+				// Handle case where sanitization produced suggestions
+				this.suggestions = finalParseResult.suggestions
+				hasShownFirstSuggestion = true
+				this.stopProcessing()
+				this.selectClosestSuggestion()
+				await this.render()
+			} else if (finalParseResult.hasNewSuggestions && hasShownFirstSuggestion) {
+				// Update existing suggestions with sanitized results
+				this.suggestions = finalParseResult.suggestions
+				this.selectClosestSuggestion()
+				await this.render()
+			}
+
 			// If we never showed any suggestions, there might have been an issue
 			if (!hasShownFirstSuggestion) {
 				console.warn("No suggestions were generated during streaming")
