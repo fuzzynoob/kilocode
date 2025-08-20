@@ -61,6 +61,13 @@ MANDATORY XML STRUCTURE RULES:
 - XML tags should be properly formatted and nested
 - Multiple <change> blocks allowed for different modifications
 
+CHANGE ORDERING PRIORITY:
+- CRITICAL: Order all <change> blocks by proximity to the cursor marker (<<<AUTOCOMPLETE_HERE>>>)
+- Put changes closest to the cursor marker FIRST in your response
+- This allows immediate display of the most relevant suggestions to the user
+- Changes further from the cursor should come later in the response
+- Measure proximity by line distance from the cursor marker position
+
 CONTENT MATCHING RULES:
 - Search content must match EXACTLY (including whitespace, indentation, and line breaks)
 - Use CDATA wrappers for all code content
