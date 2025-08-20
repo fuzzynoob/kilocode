@@ -133,8 +133,18 @@ export class GhostDecorations {
 	private displayAdditionsOperationGroup = (editor: vscode.TextEditor, group: GhostSuggestionEditOperation[]) => {
 		const line = Math.min(...group.map((x) => x.oldLine))
 
-		const nextLineInfo = editor.document.lineAt(line)
-		const range = nextLineInfo.range
+		// Handle end-of-document additions gracefully
+		let range: vscode.Range
+		if (line >= editor.document.lineCount) {
+			// If the line is beyond the document, use the last line of the document
+			const lastLineIndex = Math.max(0, editor.document.lineCount - 1)
+			const lastLineInfo = editor.document.lineAt(lastLineIndex)
+			range = new vscode.Range(lastLineInfo.range.end, lastLineInfo.range.end)
+		} else {
+			// Normal case: line exists in the document
+			const nextLineInfo = editor.document.lineAt(line)
+			range = nextLineInfo.range
+		}
 
 		let content = group
 			.sort((a, b) => a.line - b.line)
