@@ -20,6 +20,7 @@ import { getModelParams } from "../transform/model-params"
 
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 import { BaseProvider } from "./base-provider"
+import { GeminiKeyManager } from "./gemini-key-manager"
 
 type GeminiHandlerOptions = ApiHandlerOptions & {
 	isVertex?: boolean
@@ -28,36 +29,124 @@ type GeminiHandlerOptions = ApiHandlerOptions & {
 export class GeminiHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 
-	private client: GoogleGenAI
+	private keyManager: GeminiKeyManager
+	private isVertex: boolean
+	private project: string
+	private location: string
 
 	constructor({ isVertex, ...options }: GeminiHandlerOptions) {
 		super()
 
 		this.options = options
+		this.isVertex = isVertex || false
+		this.project = this.options.vertexProjectId ?? "not-provided"
+		this.location = this.options.vertexRegion ?? "not-provided"
 
-		const project = this.options.vertexProjectId ?? "not-provided"
-		const location = this.options.vertexRegion ?? "not-provided"
-		const apiKey = this.options.geminiApiKey ?? "not-provided"
+		// Initialize key manager with multiple keys or fallback to single key
+		const multiKeys = this.options.geminiApiKeys
+		const singleKey = this.options.geminiApiKey
 
-		this.client = this.options.vertexJsonCredentials
-			? new GoogleGenAI({
-					vertexai: true,
-					project,
-					location,
-					googleAuthOptions: {
-						credentials: safeJsonParse<JWTInput>(this.options.vertexJsonCredentials, undefined),
-					},
+		if (multiKeys && multiKeys.trim()) {
+			this.keyManager = new GeminiKeyManager(multiKeys)
+		} else if (singleKey && singleKey.trim()) {
+			this.keyManager = GeminiKeyManager.fromSingleKey(singleKey)
+		} else {
+			this.keyManager = new GeminiKeyManager()
+		}
+	}
+
+	/**
+	 * Create GoogleGenAI client with the given API key
+	 */
+	private createClient(apiKey: string): GoogleGenAI {
+		if (this.options.vertexJsonCredentials) {
+			return new GoogleGenAI({
+				vertexai: true,
+				project: this.project,
+				location: this.location,
+				googleAuthOptions: {
+					credentials: safeJsonParse<JWTInput>(this.options.vertexJsonCredentials, undefined),
+				},
+			})
+		}
+
+		if (this.options.vertexKeyFile) {
+			return new GoogleGenAI({
+				vertexai: true,
+				project: this.project,
+				location: this.location,
+				googleAuthOptions: { keyFile: this.options.vertexKeyFile },
+			})
+		}
+
+		if (this.isVertex) {
+			return new GoogleGenAI({ 
+				vertexai: true, 
+				project: this.project, 
+				location: this.location 
+			})
+		}
+
+		return new GoogleGenAI({ apiKey })
+	}
+
+	/**
+	 * Execute an operation with retry logic across multiple API keys
+	 */
+	private async executeWithRetry<T>(
+		operation: (client: GoogleGenAI, apiKey: string) => Promise<T>
+	): Promise<T> {
+		if (!this.keyManager.isConfigured()) {
+			throw new Error(t("common:errors.gemini.no_api_key"))
+		}
+
+		const maxAttempts = Math.min(this.keyManager.getKeyCount(), 3) // Max 3 attempts
+		let lastError: Error | null = null
+
+		for (let attempt = 0; attempt < maxAttempts; attempt++) {
+			const currentKey = this.keyManager.getCurrentKey()
+			
+			if (!currentKey) {
+				throw new Error(t("common:errors.gemini.no_available_keys"))
+			}
+
+			try {
+				const client = this.createClient(currentKey)
+				const result = await operation(client, currentKey)
+				
+				// Success - reset failed keys for this key if it was previously failed
+				this.keyManager.resetFailedKeys()
+				return result
+				
+			} catch (error) {
+				lastError = error instanceof Error ? error : new Error(String(error))
+				
+				// Mark current key as failed and try next one
+				this.keyManager.markKeyAsFailed(currentKey)
+				
+				console.warn(`Gemini API key failed (attempt ${attempt + 1}/${maxAttempts}):`, {
+					error: lastError.message,
+					keyPrefix: currentKey.substring(0, 10) + "...",
+					availableKeys: this.keyManager.getAvailableKeys().length
 				})
-			: this.options.vertexKeyFile
-				? new GoogleGenAI({
-						vertexai: true,
-						project,
-						location,
-						googleAuthOptions: { keyFile: this.options.vertexKeyFile },
-					})
-				: isVertex
-					? new GoogleGenAI({ vertexai: true, project, location })
-					: new GoogleGenAI({ apiKey })
+
+				// If this was the last attempt or no more keys available, throw
+				if (attempt === maxAttempts - 1 || !this.keyManager.hasAvailableKeys()) {
+					break
+				}
+
+				// Move to next key for retry
+				this.keyManager.getNextKey()
+			}
+		}
+
+		// All keys failed
+		throw new Error(
+			t("common:errors.gemini.all_keys_failed", { 
+				error: lastError?.message || "Unknown error",
+				keyCount: this.keyManager.getKeyCount()
+			})
+		)
 	}
 
 	async *createMessage(
@@ -90,7 +179,9 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		const params: GenerateContentParameters = { model, contents, config }
 
 		try {
-			const result = await this.client.models.generateContentStream(params)
+			const result = await this.executeWithRetry(async (client) => {
+				return await client.models.generateContentStream(params)
+			})
 
 			let lastUsageMetadata: GenerateContentResponseUsageMetadata | undefined
 			let pendingGroundingMetadata: GroundingMetadata | undefined
@@ -218,10 +309,12 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 				...(tools.length > 0 ? { tools } : {}),
 			}
 
-			const result = await this.client.models.generateContent({
-				model,
-				contents: [{ role: "user", parts: [{ text: prompt }] }],
-				config: promptConfig,
+			const result = await this.executeWithRetry(async (client) => {
+				return await client.models.generateContent({
+					model,
+					contents: [{ role: "user", parts: [{ text: prompt }] }],
+					config: promptConfig,
+				})
 			})
 
 			let text = result.text ?? ""
@@ -248,9 +341,11 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		try {
 			const { id: model } = this.getModel()
 
-			const response = await this.client.models.countTokens({
-				model,
-				contents: convertAnthropicContentToGemini(content),
+			const response = await this.executeWithRetry(async (client) => {
+				return await client.models.countTokens({
+					model,
+					contents: convertAnthropicContentToGemini(content),
+				})
 			})
 
 			if (response.totalTokens === undefined) {

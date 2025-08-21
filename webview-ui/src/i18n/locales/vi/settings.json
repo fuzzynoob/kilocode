@@ -348,6 +348,13 @@
 				"description": "Cho phép Gemini tìm kiếm trên Google để lấy thông tin mới nhất và căn cứ phản hồi dựa trên dữ liệu thời gian thực. Hữu ích cho các truy vấn yêu cầu thông tin cập nhật."
 			}
 		},
+		"gemini": {
+			"useMultipleApiKeys": "Sử dụng nhiều API key (xoay vòng)",
+			"multipleApiKeysDescription": "Bật xoay vòng giữa nhiều API key để cải thiện giới hạn tốc độ và độ tin cậy.",
+			"multipleApiKeysLabel": "Nhiều API Key Gemini",
+			"multipleApiKeysPlaceholder": "Nhập các API key của bạn, mỗi dòng một key:\nAIzaSyC1234567890abcdef\nAIzaSyD234567890abcdef1\nAIzaSyE34567890abcdef12",
+			"multipleApiKeysInstructions": "Nhập một API key mỗi dòng. Các key sẽ được xoay vòng tự động với fallback khi có lỗi."
+		},
 		"googleCloudSetup": {
 			"title": "Để sử dụng Google Cloud Vertex AI, bạn cần:",
 			"step1": "1. Tạo tài khoản Google Cloud, kích hoạt Vertex AI API và kích hoạt các mô hình Claude mong muốn.",

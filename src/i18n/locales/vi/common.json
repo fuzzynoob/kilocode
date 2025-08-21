@@ -108,6 +108,9 @@
 		"gemini": {
 			"generate_stream": "Lỗi luồng ngữ cảnh tạo Gemini: {{error}}",
 			"generate_complete_prompt": "Lỗi hoàn thành Gemini: {{error}}",
+			"no_api_key": "Chưa cấu hình API key Gemini. Vui lòng thêm ít nhất một API key trong cài đặt.",
+			"no_available_keys": "Không có API key Gemini khả dụng. Tất cả các key đã cấu hình đều bị lỗi.",
+			"all_keys_failed": "Tất cả {{keyCount}} API key Gemini đều thất bại. Lỗi cuối: {{error}}",
 			"sources": "Nguồn:"
 		},
 		"cerebras": {

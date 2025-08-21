@@ -111,6 +111,9 @@
 		"gemini": {
 			"generate_stream": "Gemini generate context stream error: {{error}}",
 			"generate_complete_prompt": "Gemini completion error: {{error}}",
+			"no_api_key": "No Gemini API key configured. Please add at least one API key in settings.",
+			"no_available_keys": "No available Gemini API keys. All configured keys have failed.",
+			"all_keys_failed": "All {{keyCount}} Gemini API keys failed. Last error: {{error}}",
 			"sources": "Sources:"
 		},
 		"cerebras": {

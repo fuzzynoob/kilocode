@@ -204,6 +204,7 @@ const lmStudioSchema = baseProviderSettingsSchema.extend({
 
 const geminiSchema = apiModelIdProviderModelSchema.extend({
 	geminiApiKey: z.string().optional(),
+	geminiApiKeys: z.string().optional(), // Multiple API keys separated by newlines
 	googleGeminiBaseUrl: z.string().optional(),
 	enableUrlContext: z.boolean().optional(),
 	enableGrounding: z.boolean().optional(),

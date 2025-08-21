@@ -11,12 +11,15 @@ const GEMINI_20_FLASH_THINKING_NAME = "gemini-2.0-flash-thinking-exp-1219"
 
 describe("GeminiHandler", () => {
 	let handler: GeminiHandler
+	let mockGenerateContentStream: any
+	let mockGenerateContent: any
+	let mockGetGenerativeModel: any
 
 	beforeEach(() => {
 		// Create mock functions
-		const mockGenerateContentStream = vitest.fn()
-		const mockGenerateContent = vitest.fn()
-		const mockGetGenerativeModel = vitest.fn()
+		mockGenerateContentStream = vitest.fn()
+		mockGenerateContent = vitest.fn()
+		mockGetGenerativeModel = vitest.fn()
 
 		handler = new GeminiHandler({
 			apiKey: "test-key",
@@ -24,14 +27,18 @@ describe("GeminiHandler", () => {
 			geminiApiKey: "test-key",
 		})
 
-		// Replace the client with our mock
-		handler["client"] = {
-			models: {
-				generateContentStream: mockGenerateContentStream,
-				generateContent: mockGenerateContent,
-				getGenerativeModel: mockGetGenerativeModel,
-			},
-		} as any
+		// Mock the executeWithRetry method to bypass the key manager for tests
+		vitest.spyOn(handler as any, "executeWithRetry").mockImplementation(async (operation: any) => {
+			// Create a mock client
+			const mockClient = {
+				models: {
+					generateContentStream: mockGenerateContentStream,
+					generateContent: mockGenerateContent,
+					getGenerativeModel: mockGetGenerativeModel,
+				},
+			}
+			return operation(mockClient as any, "test-key")
+		})
 	})
 
 	describe("constructor", () => {
@@ -57,7 +64,7 @@ describe("GeminiHandler", () => {
 
 		it("should handle text messages correctly", async () => {
 			// Setup the mock implementation to return an async generator
-			;(handler["client"].models.generateContentStream as any).mockResolvedValue({
+			mockGenerateContentStream.mockResolvedValue({
 				[Symbol.asyncIterator]: async function* () {
 					yield { text: "Hello" }
 					yield { text: " world!" }
@@ -79,7 +86,7 @@ describe("GeminiHandler", () => {
 			expect(chunks[2]).toEqual({ type: "usage", inputTokens: 10, outputTokens: 5 })
 
 			// Verify the call to generateContentStream
-			expect(handler["client"].models.generateContentStream).toHaveBeenCalledWith(
+			expect(mockGenerateContentStream).toHaveBeenCalledWith(
 				expect.objectContaining({
 					model: GEMINI_20_FLASH_THINKING_NAME,
 					config: expect.objectContaining({
@@ -92,7 +99,7 @@ describe("GeminiHandler", () => {
 
 		it("should handle API errors", async () => {
 			const mockError = new Error("Gemini API error")
-			;(handler["client"].models.generateContentStream as any).mockRejectedValue(mockError)
+			mockGenerateContentStream.mockRejectedValue(mockError)
 
 			const stream = handler.createMessage(systemPrompt, mockMessages)
 
@@ -107,7 +114,7 @@ describe("GeminiHandler", () => {
 	describe("completePrompt", () => {
 		it("should complete prompt successfully", async () => {
 			// Mock the response with text property
-			;(handler["client"].models.generateContent as any).mockResolvedValue({
+			mockGenerateContent.mockResolvedValue({
 				text: "Test response",
 			})
 
@@ -115,7 +122,7 @@ describe("GeminiHandler", () => {
 			expect(result).toBe("Test response")
 
 			// Verify the call to generateContent
-			expect(handler["client"].models.generateContent).toHaveBeenCalledWith({
+			expect(mockGenerateContent).toHaveBeenCalledWith({
 				model: GEMINI_20_FLASH_THINKING_NAME,
 				contents: [{ role: "user", parts: [{ text: "Test prompt" }] }],
 				config: {
@@ -127,7 +134,7 @@ describe("GeminiHandler", () => {
 
 		it("should handle API errors", async () => {
 			const mockError = new Error("Gemini API error")
-			;(handler["client"].models.generateContent as any).mockRejectedValue(mockError)
+			mockGenerateContent.mockRejectedValue(mockError)
 
 			await expect(handler.completePrompt("Test prompt")).rejects.toThrow(
 				t("common:errors.gemini.generate_complete_prompt", { error: "Gemini API error" }),
@@ -136,7 +143,7 @@ describe("GeminiHandler", () => {
 
 		it("should handle empty response", async () => {
 			// Mock the response with empty text
-			;(handler["client"].models.generateContent as any).mockResolvedValue({
+			mockGenerateContent.mockResolvedValue({
 				text: "",
 			})
 

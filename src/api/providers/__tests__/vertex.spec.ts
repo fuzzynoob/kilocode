@@ -13,11 +13,15 @@ import { VertexHandler } from "../vertex"
 describe("VertexHandler", () => {
 	let handler: VertexHandler
 
+	let mockGenerateContentStream: any
+	let mockGenerateContent: any
+	let mockGetGenerativeModel: any
+
 	beforeEach(() => {
 		// Create mock functions
-		const mockGenerateContentStream = vitest.fn()
-		const mockGenerateContent = vitest.fn()
-		const mockGetGenerativeModel = vitest.fn()
+		mockGenerateContentStream = vitest.fn()
+		mockGenerateContent = vitest.fn()
+		mockGetGenerativeModel = vitest.fn()
 
 		handler = new VertexHandler({
 			apiModelId: "gemini-1.5-pro-001",
@@ -25,14 +29,18 @@ describe("VertexHandler", () => {
 			vertexRegion: "us-central1",
 		})
 
-		// Replace the client with our mock
-		handler["client"] = {
-			models: {
-				generateContentStream: mockGenerateContentStream,
-				generateContent: mockGenerateContent,
-				getGenerativeModel: mockGetGenerativeModel,
-			},
-		} as any
+		// Mock the executeWithRetry method to bypass the key manager for tests
+		vitest.spyOn(handler as any, "executeWithRetry").mockImplementation(async (operation: any) => {
+			// Create a mock client
+			const mockClient = {
+				models: {
+					generateContentStream: mockGenerateContentStream,
+					generateContent: mockGenerateContent,
+					getGenerativeModel: mockGetGenerativeModel,
+				},
+			}
+			return operation(mockClient as any, "test-key")
+		})
 	})
 
 	describe("createMessage", () => {
@@ -82,7 +90,7 @@ describe("VertexHandler", () => {
 	describe("completePrompt", () => {
 		it("should complete prompt successfully for Gemini", async () => {
 			// Mock the response with text property
-			;(handler["client"].models.generateContent as any).mockResolvedValue({
+			mockGenerateContent.mockResolvedValue({
 				text: "Test Gemini response",
 			})
 
@@ -90,7 +98,7 @@ describe("VertexHandler", () => {
 			expect(result).toBe("Test Gemini response")
 
 			// Verify the call to generateContent
-			expect(handler["client"].models.generateContent).toHaveBeenCalledWith(
+			expect(mockGenerateContent).toHaveBeenCalledWith(
 				expect.objectContaining({
 					model: expect.any(String),
 					contents: [{ role: "user", parts: [{ text: "Test prompt" }] }],
@@ -103,7 +111,7 @@ describe("VertexHandler", () => {
 
 		it("should handle API errors for Gemini", async () => {
 			const mockError = new Error("Vertex API error")
-			;(handler["client"].models.generateContent as any).mockRejectedValue(mockError)
+			mockGenerateContent.mockRejectedValue(mockError)
 
 			await expect(handler.completePrompt("Test prompt")).rejects.toThrow(
 				t("common:errors.gemini.generate_complete_prompt", { error: "Vertex API error" }),
@@ -112,7 +120,7 @@ describe("VertexHandler", () => {
 
 		it("should handle empty response for Gemini", async () => {
 			// Mock the response with empty text
-			;(handler["client"].models.generateContent as any).mockResolvedValue({
+			mockGenerateContent.mockResolvedValue({
 				text: "",
 			})
 

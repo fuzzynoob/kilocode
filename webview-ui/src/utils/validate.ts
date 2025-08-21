@@ -69,7 +69,13 @@ function validateModelsAndKeysProvided(apiConfiguration: ProviderSettings): stri
 			}
 			break
 		case "gemini":
-			if (!apiConfiguration.geminiApiKey) {
+			// Check for either single key or multiple keys
+			const hasSingleKey = apiConfiguration.geminiApiKey && apiConfiguration.geminiApiKey.trim()
+			const hasMultipleKeys = apiConfiguration.geminiApiKeys && 
+				apiConfiguration.geminiApiKeys.trim() && 
+				apiConfiguration.geminiApiKeys.split(/\r?\n/).some(key => key.trim().length > 0)
+			
+			if (!hasSingleKey && !hasMultipleKeys) {
 				return i18next.t("settings:validation.apiKey")
 			}
 			break

@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react"
 import { Checkbox } from "vscrui"
-import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeTextField, VSCodeTextArea } from "@vscode/webview-ui-toolkit/react"
 
 import type { ProviderSettings } from "@roo-code/types"
 
@@ -21,6 +21,11 @@ export const Gemini = ({ apiConfiguration, setApiConfigurationField, fromWelcome
 	const [googleGeminiBaseUrlSelected, setGoogleGeminiBaseUrlSelected] = useState(
 		!!apiConfiguration?.googleGeminiBaseUrl,
 	)
+	
+	// Multiple keys mode state - default to true if geminiApiKeys is configured
+	const [useMultipleKeys, setUseMultipleKeys] = useState(
+		!!(apiConfiguration?.geminiApiKeys && apiConfiguration?.geminiApiKeys.trim())
+	)
 
 	const handleInputChange = useCallback(
 		<K extends keyof ProviderSettings, E>(
@@ -35,18 +40,71 @@ export const Gemini = ({ apiConfiguration, setApiConfigurationField, fromWelcome
 
 	return (
 		<>
-			<VSCodeTextField
-				value={apiConfiguration?.geminiApiKey || ""}
-				type="password"
-				onInput={handleInputChange("geminiApiKey")}
-				placeholder={t("settings:placeholders.apiKey")}
-				className="w-full">
-				<label className="block font-medium mb-1">{t("settings:providers.geminiApiKey")}</label>
-			</VSCodeTextField>
-			<div className="text-sm text-vscode-descriptionForeground -mt-2">
-				{t("settings:providers.apiKeyStorageNotice")}
+			{/* Multiple keys mode toggle */}
+			<div className="mb-4">
+				<Checkbox
+					checked={useMultipleKeys}
+					onChange={(checked: boolean) => {
+						setUseMultipleKeys(checked)
+						if (checked) {
+							// Migrate single key to multiple keys format
+							const singleKey = apiConfiguration?.geminiApiKey
+							if (singleKey && singleKey.trim()) {
+								setApiConfigurationField("geminiApiKeys", singleKey)
+								setApiConfigurationField("geminiApiKey", "")
+							}
+						} else {
+							// Migrate back to single key (use first key if available)
+							const multiKeys = apiConfiguration?.geminiApiKeys
+							if (multiKeys && multiKeys.trim()) {
+								const keys = multiKeys.split(/\r?\n/).map(k => k.trim()).filter(k => k.length > 0)
+								if (keys.length > 0) {
+									setApiConfigurationField("geminiApiKey", keys[0])
+								}
+							}
+							setApiConfigurationField("geminiApiKeys", "")
+						}
+					}}>
+					{t("settings:providers.gemini.useMultipleApiKeys")}
+				</Checkbox>
+				<div className="text-sm text-vscode-descriptionForeground mt-1">
+					{t("settings:providers.gemini.multipleApiKeysDescription")}
+				</div>
 			</div>
-			{!apiConfiguration?.geminiApiKey && (
+
+			{/* API Key Input */}
+			{useMultipleKeys ? (
+				<>
+					<VSCodeTextArea
+						value={apiConfiguration?.geminiApiKeys || ""}
+						onInput={handleInputChange("geminiApiKeys")}
+						placeholder={t("settings:providers.gemini.multipleApiKeysPlaceholder")}
+						className="w-full"
+						rows={4}>
+						<label className="block font-medium mb-1">{t("settings:providers.gemini.multipleApiKeysLabel")}</label>
+					</VSCodeTextArea>
+					<div className="text-sm text-vscode-descriptionForeground -mt-2">
+						{t("settings:providers.gemini.multipleApiKeysInstructions")}
+					</div>
+				</>
+			) : (
+				<>
+					<VSCodeTextField
+						value={apiConfiguration?.geminiApiKey || ""}
+						type="password"
+						onInput={handleInputChange("geminiApiKey")}
+						placeholder={t("settings:placeholders.apiKey")}
+						className="w-full">
+						<label className="block font-medium mb-1">{t("settings:providers.geminiApiKey")}</label>
+					</VSCodeTextField>
+					<div className="text-sm text-vscode-descriptionForeground -mt-2">
+						{t("settings:providers.apiKeyStorageNotice")}
+					</div>
+				</>
+			)}
+
+			{/* Get API key link */}
+			{((useMultipleKeys && !apiConfiguration?.geminiApiKeys) || (!useMultipleKeys && !apiConfiguration?.geminiApiKey)) && (
 				<VSCodeButtonLink href="https://ai.google.dev/" appearance="secondary">
 					{t("settings:providers.getGeminiApiKey")}
 				</VSCodeButtonLink>

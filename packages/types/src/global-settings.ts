@@ -189,6 +189,7 @@ export const SECRET_STATE_KEYS = [
 	"awsSessionToken",
 	"openAiApiKey",
 	"geminiApiKey",
+	"geminiApiKeys", // Multiple Gemini API keys separated by newlines
 	"openAiNativeApiKey",
 	"cerebrasApiKey",
 	"deepSeekApiKey",
