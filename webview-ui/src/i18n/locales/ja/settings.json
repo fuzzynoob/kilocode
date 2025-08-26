@@ -348,6 +348,13 @@
 				"description": "GeminiがGoogleを検索して最新情報を取得し、リアルタイムデータに基づいて応答をグラウンディングできるようにします。最新情報が必要なクエリに便利です。"
 			}
 		},
+		"gemini": {
+			"useMultipleApiKeys": "複数のAPIキーを使用 (ラウンドロビン)",
+			"multipleApiKeysDescription": "複数のAPIキー間でのラウンドロビンローテーションを有効にして、レート制限と信頼性を向上させます。",
+			"multipleApiKeysLabel": "複数のGemini APIキー",
+			"multipleApiKeysPlaceholder": "APIキーを1行に1つずつ入力してください:\nAIzaSyC1234567890abcdef\nAIzaSyD234567890abcdef1\nAIzaSyE34567890abcdef12",
+			"multipleApiKeysInstructions": "1行に1つのAPIキーを入力してください。キーは失敗時のフォールバックとともに自動的にローテーションされます。"
+		},
 		"googleCloudSetup": {
 			"title": "Google Cloud Vertex AIを使用するには：",
 			"step1": "1. Google Cloudアカウントを作成し、Vertex AI APIを有効にして、希望するClaudeモデルを有効にします。",

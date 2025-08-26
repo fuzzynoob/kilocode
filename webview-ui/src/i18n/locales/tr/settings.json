@@ -348,6 +348,13 @@
 				"description": "Gemini'nin güncel bilgileri almak için Google'da arama yapmasına ve yanıtları gerçek zamanlı verilere dayandırmasına izin verir. Güncel bilgi gerektiren sorgular için kullanışlıdır."
 			}
 		},
+		"gemini": {
+			"useMultipleApiKeys": "Birden fazla API anahtarı kullan (round-robin)",
+			"multipleApiKeysDescription": "Daha iyi hız sınırlaması ve güvenilirlik için birden fazla API anahtarı arasında round-robin rotasyonunu etkinleştirin.",
+			"multipleApiKeysLabel": "Birden fazla Gemini API anahtarı",
+			"multipleApiKeysPlaceholder": "API anahtarlarınızı girin, her satıra bir tane:\nAIzaSyC1234567890abcdef\nAIzaSyD234567890abcdef1\nAIzaSyE34567890abcdef12",
+			"multipleApiKeysInstructions": "Her satıra bir API anahtarı girin. Anahtarlar başarısızlık durumunda fallback ile otomatik olarak rotasyona alınacaktır."
+		},
 		"googleCloudSetup": {
 			"title": "Google Cloud Vertex AI'yi kullanmak için şunları yapmanız gerekir:",
 			"step1": "1. Google Cloud hesabı oluşturun, Vertex AI API'sini etkinleştirin ve istediğiniz Claude modellerini etkinleştirin.",

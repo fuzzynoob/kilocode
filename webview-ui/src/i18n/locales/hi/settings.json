@@ -348,6 +348,13 @@
 				"description": "Gemini को वास्तविक समय के डेटा पर आधारित उत्तर प्रदान करने के लिए Google पर जानकारी खोजने और उत्तरों को ग्राउंड करने की अनुमति देता है। अद्यतित जानकारी की आवश्यकता वाली क्वेरीज़ के लिए उपयोगी।"
 			}
 		},
+		"gemini": {
+			"useMultipleApiKeys": "कई API कुंजी का उपयोग करें (round-robin)",
+			"multipleApiKeysDescription": "बेहतर दर सीमा और विश्वसनीयता के लिए कई API कुंजी के बीच round-robin रोटेशन सक्षम करें।",
+			"multipleApiKeysLabel": "कई Gemini API कुंजी",
+			"multipleApiKeysPlaceholder": "अपनी API कुंजी दर्ज करें, प्रति पंक्ति एक:\nAIzaSyC1234567890abcdef\nAIzaSyD234567890abcdef1\nAIzaSyE34567890abcdef12",
+			"multipleApiKeysInstructions": "प्रति पंक्ति एक API कुंजी दर्ज करें। विफलताओं पर फॉलबैक के साथ कुंजी स्वचालित रूप से घुमाई जाएंगी।"
+		},
 		"googleCloudSetup": {
 			"title": "Google Cloud Vertex AI का उपयोग करने के लिए, आपको आवश्यकता है:",
 			"step1": "1. Google Cloud खाता बनाएं, Vertex AI API सक्षम करें और वांछित Claude मॉडल सक्षम करें।",

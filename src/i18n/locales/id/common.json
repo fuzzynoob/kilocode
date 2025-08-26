@@ -111,6 +111,9 @@
 		"gemini": {
 			"generate_stream": "Kesalahan aliran konteks pembuatan Gemini: {{error}}",
 			"generate_complete_prompt": "Kesalahan penyelesaian Gemini: {{error}}",
+			"no_api_key": "Tidak ada kunci API Gemini yang dikonfigurasi. Silakan tambahkan setidaknya satu kunci API di pengaturan.",
+			"no_available_keys": "Tidak ada kunci API Gemini yang tersedia. Semua kunci yang dikonfigurasi telah gagal.",
+			"all_keys_failed": "Semua {{keyCount}} kunci API Gemini gagal. Kesalahan terakhir: {{error}}",
 			"sources": "Sumber:"
 		},
 		"cerebras": {

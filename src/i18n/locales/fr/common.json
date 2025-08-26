@@ -111,6 +111,9 @@
 		"gemini": {
 			"generate_stream": "Erreur du flux de contexte de génération Gemini : {{error}}",
 			"generate_complete_prompt": "Erreur d'achèvement de Gemini : {{error}}",
+			"no_api_key": "Aucune clé API Gemini configurée. Veuillez ajouter au moins une clé API dans les paramètres.",
+			"no_available_keys": "Aucune clé API Gemini disponible. Toutes les clés configurées ont échoué.",
+			"all_keys_failed": "Toutes les {{keyCount}} clés API Gemini ont échoué. Dernière erreur : {{error}}",
 			"sources": "Sources :"
 		},
 		"cerebras": {

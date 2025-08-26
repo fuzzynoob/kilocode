@@ -110,6 +110,9 @@
 		"gemini": {
 			"generate_stream": "Gemini 產生內容串流錯誤：{{error}}",
 			"generate_complete_prompt": "Gemini 完成錯誤：{{error}}",
+			"no_api_key": "未配置 Gemini API 金鑰。請在設定中添加至少一個 API 金鑰。",
+			"no_available_keys": "沒有可用的 Gemini API 金鑰。所有配置的金鑰都失敗了。",
+			"all_keys_failed": "所有 {{keyCount}} 個 Gemini API 金鑰都失敗了。最後的錯誤：{{error}}",
 			"sources": "來源："
 		},
 		"cerebras": {

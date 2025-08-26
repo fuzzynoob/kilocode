@@ -111,6 +111,9 @@
 		"gemini": {
 			"generate_stream": "Fout bij het genereren van contextstream door Gemini: {{error}}",
 			"generate_complete_prompt": "Fout bij het voltooien door Gemini: {{error}}",
+			"no_api_key": "Geen Gemini API-sleutel geconfigureerd. Voeg ten minste één API-sleutel toe in de instellingen.",
+			"no_available_keys": "Geen beschikbare Gemini API-sleutels. Alle geconfigureerde sleutels zijn mislukt.",
+			"all_keys_failed": "Alle {{keyCount}} Gemini API-sleutels zijn mislukt. Laatste fout: {{error}}",
 			"sources": "Bronnen:"
 		},
 		"cerebras": {

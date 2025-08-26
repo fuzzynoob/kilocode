@@ -113,6 +113,9 @@
 		"gemini": {
 			"generate_stream": "Gemini 生成上下文流错误：{{error}}",
 			"generate_complete_prompt": "Gemini 完成错误：{{error}}",
+			"no_api_key": "未配置 Gemini API 密钥。请在设置中添加至少一个 API 密钥。",
+			"no_available_keys": "没有可用的 Gemini API 密钥。所有配置的密钥都失败了。",
+			"all_keys_failed": "所有 {{keyCount}} 个 Gemini API 密钥都失败了。最后的错误：{{error}}",
 			"sources": "来源："
 		},
 		"cerebras": {

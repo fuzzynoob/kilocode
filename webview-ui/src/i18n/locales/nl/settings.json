@@ -348,6 +348,13 @@
 				"description": "Staat Gemini toe om Google te doorzoeken voor actuele informatie en antwoorden op realtime gegevens te baseren. Handig voor vragen die actuele informatie vereisen."
 			}
 		},
+		"gemini": {
+			"useMultipleApiKeys": "Meerdere API-sleutels gebruiken (round-robin)",
+			"multipleApiKeysDescription": "Round-robin rotatie tussen meerdere API-sleutels inschakelen voor betere snelheidsbegrenzing en betrouwbaarheid.",
+			"multipleApiKeysLabel": "Meerdere Gemini API-sleutels",
+			"multipleApiKeysPlaceholder": "Voer je API-sleutels in, één per regel:\nAIzaSyC1234567890abcdef\nAIzaSyD234567890abcdef1\nAIzaSyE34567890abcdef12",
+			"multipleApiKeysInstructions": "Voer één API-sleutel per regel in. Sleutels worden automatisch geroteerd met fallback bij fouten."
+		},
 		"googleCloudSetup": {
 			"title": "Om Google Cloud Vertex AI te gebruiken, moet je:",
 			"step1": "1. Maak een Google Cloud-account aan, schakel de Vertex AI API in en activeer de gewenste Claude-modellen.",

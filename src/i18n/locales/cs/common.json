@@ -116,6 +116,9 @@
 		"gemini": {
 			"generate_stream": "Chyba generování kontextového proudu Gemini: {{error}}",
 			"generate_complete_prompt": "Chyba dokončení Gemini: {{error}}",
+			"no_api_key": "Není nakonfigurován žádný API klíč pro Gemini. Přidejte prosím alespoň jeden API klíč v nastavení.",
+			"no_available_keys": "Nejsou k dispozici žádné API klíče pro Gemini. Všechny nakonfigurované klíče selhaly.",
+			"all_keys_failed": "Všech {{keyCount}} API klíčů pro Gemini selhalo. Poslední chyba: {{error}}",
 			"sources": "Zdroje:"
 		},
 		"cerebras": {

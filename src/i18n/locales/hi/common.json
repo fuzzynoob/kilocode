@@ -111,6 +111,9 @@
 		"gemini": {
 			"generate_stream": "जेमिनी जनरेट कॉन्टेक्स्ट स्ट्रीम त्रुटि: {{error}}",
 			"generate_complete_prompt": "जेमिनी समापन त्रुटि: {{error}}",
+			"no_api_key": "कोई Gemini API कुंजी कॉन्फ़िगर नहीं है। कृपया सेटिंग्स में कम से कम एक API कुंजी जोड़ें।",
+			"no_available_keys": "कोई उपलब्ध Gemini API कुंजी नहीं है। सभी कॉन्फ़िगर की गई कुंजी विफल हो गई हैं।",
+			"all_keys_failed": "सभी {{keyCount}} Gemini API कुंजी विफल हो गईं। अंतिम त्रुटि: {{error}}",
 			"sources": "स्रोत:"
 		},
 		"cerebras": {

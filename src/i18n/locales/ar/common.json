@@ -116,6 +116,9 @@
 		"gemini": {
 			"generate_stream": "خطأ في تدفق السياق من Gemini: {{error}}",
 			"generate_complete_prompt": "خطأ في إكمال Gemini: {{error}}",
+			"no_api_key": "لم يتم تكوين مفتاح API للـ Gemini. يرجى إضافة مفتاح API واحد على الأقل في الإعدادات.",
+			"no_available_keys": "لا توجد مفاتيح API متاحة للـ Gemini. جميع المفاتيح المكونة فشلت.",
+			"all_keys_failed": "جميع مفاتيح API للـ Gemini ({{keyCount}}) فشلت. آخر خطأ: {{error}}",
 			"sources": "المصادر:"
 		},
 		"cerebras": {

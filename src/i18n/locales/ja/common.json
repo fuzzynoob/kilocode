@@ -108,6 +108,9 @@
 		"gemini": {
 			"generate_stream": "Gemini 生成コンテキスト ストリーム エラー: {{error}}",
 			"generate_complete_prompt": "Gemini 完了エラー: {{error}}",
+			"no_api_key": "Gemini APIキーが設定されていません。設定で少なくとも1つのAPIキーを追加してください。",
+			"no_available_keys": "利用可能なGemini APIキーがありません。設定されたすべてのキーが失敗しました。",
+			"all_keys_failed": "すべての{{keyCount}}個のGemini APIキーが失敗しました。最後のエラー: {{error}}",
 			"sources": "ソース:"
 		},
 		"cerebras": {

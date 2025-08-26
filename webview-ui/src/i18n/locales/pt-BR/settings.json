@@ -348,6 +348,13 @@
 				"description": "Permite que o Gemini pesquise informações atuais no Google e fundamente as respostas em dados em tempo real. Útil para consultas que requerem informações atualizadas."
 			}
 		},
+		"gemini": {
+			"useMultipleApiKeys": "Usar múltiplas chaves de API (round-robin)",
+			"multipleApiKeysDescription": "Ativar rotação round-robin entre múltiplas chaves de API para melhor limitação de taxa e confiabilidade.",
+			"multipleApiKeysLabel": "Múltiplas chaves de API do Gemini",
+			"multipleApiKeysPlaceholder": "Digite suas chaves de API, uma por linha:\nAIzaSyC1234567890abcdef\nAIzaSyD234567890abcdef1\nAIzaSyE34567890abcdef12",
+			"multipleApiKeysInstructions": "Digite uma chave de API por linha. As chaves serão rotacionadas automaticamente com fallback em caso de falhas."
+		},
 		"googleCloudSetup": {
 			"title": "Para usar o Google Cloud Vertex AI, você precisa:",
 			"step1": "1. Criar uma conta Google Cloud, ativar a API Vertex AI e ativar os modelos Claude desejados.",

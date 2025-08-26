@@ -348,6 +348,13 @@
 				"description": "Memungkinkan Gemini mencari informasi terkini di Google dan mendasarkan respons pada data waktu nyata. Berguna untuk kueri yang memerlukan informasi terkini."
 			}
 		},
+		"gemini": {
+			"useMultipleApiKeys": "Gunakan beberapa kunci API (round-robin)",
+			"multipleApiKeysDescription": "Aktifkan rotasi round-robin di antara beberapa kunci API untuk pembatasan laju dan keandalan yang lebih baik.",
+			"multipleApiKeysLabel": "Beberapa Kunci API Gemini",
+			"multipleApiKeysPlaceholder": "Masukkan kunci API Anda, satu per baris:\nAIzaSyC1234567890abcdef\nAIzaSyD234567890abcdef1\nAIzaSyE34567890abcdef12",
+			"multipleApiKeysInstructions": "Masukkan satu kunci API per baris. Kunci akan dirotasi secara otomatis dengan fallback saat gagal."
+		},
 		"googleCloudSetup": {
 			"title": "Untuk menggunakan Google Cloud Vertex AI, kamu perlu:",
 			"step1": "1. Buat akun Google Cloud, aktifkan Vertex AI API & aktifkan model Claude yang diinginkan.",

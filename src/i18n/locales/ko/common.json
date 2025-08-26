@@ -111,6 +111,9 @@
 		"gemini": {
 			"generate_stream": "Gemini 생성 컨텍스트 스트림 오류: {{error}}",
 			"generate_complete_prompt": "Gemini 완료 오류: {{error}}",
+			"no_api_key": "Gemini API 키가 구성되지 않았습니다. 설정에서 최소 하나의 API 키를 추가하세요.",
+			"no_available_keys": "사용 가능한 Gemini API 키가 없습니다. 구성된 모든 키가 실패했습니다.",
+			"all_keys_failed": "모든 {{keyCount}}개의 Gemini API 키가 실패했습니다. 마지막 오류: {{error}}",
 			"sources": "출처:"
 		},
 		"cerebras": {

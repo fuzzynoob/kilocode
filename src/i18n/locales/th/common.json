@@ -113,6 +113,9 @@
 		"gemini": {
 			"generate_stream": "ข้อผิดพลาดในการสร้างสตรีมบริบท Gemini: {{error}}",
 			"generate_complete_prompt": "ข้อผิดพลาดการทำงานเสร็จสิ้น Gemini: {{error}}",
+			"no_api_key": "ไม่มีการกำหนดค่า API key ของ Gemini โปรดเพิ่ม API key อย่างน้อยหนึ่งตัวในการตั้งค่า",
+			"no_available_keys": "ไม่มี API key ของ Gemini ที่ใช้งานได้ API key ที่กำหนดค่าไว้ทั้งหมดล้มเหลว",
+			"all_keys_failed": "API key ของ Gemini ทั้งหมด {{keyCount}} ตัวล้มเหลว ข้อผิดพลาดล่าสุด: {{error}}",
 			"sources": "แหล่งที่มา:"
 		},
 		"cerebras": {

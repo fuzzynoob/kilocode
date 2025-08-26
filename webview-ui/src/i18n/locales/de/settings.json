@@ -348,6 +348,13 @@
 				"description": "Verbindet Gemini mit Echtzeit-Webdaten für genaue, aktuelle Antworten mit überprüfbaren Zitaten."
 			}
 		},
+		"gemini": {
+			"useMultipleApiKeys": "Mehrere API-Schlüssel verwenden (Round-Robin)",
+			"multipleApiKeysDescription": "Round-Robin-Rotation zwischen mehreren API-Schlüsseln für bessere Ratenbegrenzung und Zuverlässigkeit aktivieren.",
+			"multipleApiKeysLabel": "Mehrere Gemini API-Schlüssel",
+			"multipleApiKeysPlaceholder": "Geben Sie Ihre API-Schlüssel ein, einen pro Zeile:\nAIzaSyC1234567890abcdef\nAIzaSyD234567890abcdef1\nAIzaSyE34567890abcdef12",
+			"multipleApiKeysInstructions": "Geben Sie einen API-Schlüssel pro Zeile ein. Schlüssel werden automatisch rotiert mit Fallback bei Fehlern."
+		},
 		"googleCloudSetup": {
 			"title": "Um Google Cloud Vertex AI zu verwenden, musst du:",
 			"step1": "1. Ein Google Cloud-Konto erstellen, die Vertex AI API aktivieren & die gewünschten Claude-Modelle aktivieren.",

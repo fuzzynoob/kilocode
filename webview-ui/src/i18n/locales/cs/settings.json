@@ -363,6 +363,13 @@
 				"description": "Připojuje Gemini k webovým datům v reálném čase pro přesné, aktuální odpovědi s ověřitelnými citacemi."
 			}
 		},
+		"gemini": {
+			"useMultipleApiKeys": "Použít více API klíčů (round-robin)",
+			"multipleApiKeysDescription": "Povolit round-robin rotaci mezi více API klíči pro lepší omezení rychlosti a spolehlivost.",
+			"multipleApiKeysLabel": "Více API klíčů Gemini",
+			"multipleApiKeysPlaceholder": "Zadejte své API klíče, jeden na řádek:\nAIzaSyC1234567890abcdef\nAIzaSyD234567890abcdef1\nAIzaSyE34567890abcdef12",
+			"multipleApiKeysInstructions": "Zadejte jeden API klíč na řádek. Klíče budou automaticky rotovány s fallbackem při selhání."
+		},
 		"googleCloudSetup": {
 			"title": "Chcete-li používat Google Cloud Vertex AI, musíte:",
 			"step1": "1. Vytvořit účet Google Cloud, povolit rozhraní Vertex AI API a povolit požadované modely Claude.",

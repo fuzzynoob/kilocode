@@ -349,6 +349,13 @@
 				"description": "将 Gemini 连接到实时网络数据，以获得包含可验证引用的准确、最新的答案。"
 			}
 		},
+		"gemini": {
+			"useMultipleApiKeys": "使用多个 API 密钥（轮询）",
+			"multipleApiKeysDescription": "启用多个 API 密钥之间的轮询轮换以获得更好的速率限制和可靠性。",
+			"multipleApiKeysLabel": "多个 Gemini API 密钥",
+			"multipleApiKeysPlaceholder": "输入您的 API 密钥，每行一个：\nAIzaSyC1234567890abcdef\nAIzaSyD234567890abcdef1\nAIzaSyE34567890abcdef12",
+			"multipleApiKeysInstructions": "每行输入一个 API 密钥。密钥将自动轮换，失败时会有备用选项。"
+		},
 		"googleCloudSetup": {
 			"title": "要使用 Google Cloud Vertex AI，您需要：",
 			"step1": "1. 注册Google Cloud账号并启用Vertex AI API",

@@ -361,6 +361,13 @@
 				"description": "يربط Gemini ببيانات الويب الحية للحصول على إجابات دقيقة ومحدثة مع استشهادات قابلة للتحقق."
 			}
 		},
+		"gemini": {
+			"useMultipleApiKeys": "استخدام عدة مفاتيح API (دوري)",
+			"multipleApiKeysDescription": "تفعيل التناوب الدوري بين عدة مفاتيح API لتحسين حدود المعدل والموثوقية.",
+			"multipleApiKeysLabel": "مفاتيح Gemini API متعددة",
+			"multipleApiKeysPlaceholder": "أدخل مفاتيح API الخاصة بك، واحد في كل سطر:\nAIzaSyC1234567890abcdef\nAIzaSyD234567890abcdef1\nAIzaSyE34567890abcdef12",
+			"multipleApiKeysInstructions": "أدخل مفتاح API واحد في كل سطر. سيتم تدوير المفاتيح تلقائياً مع الاحتياط عند الفشل."
+		},
 		"vscodeLmModel": "نموذج اللغة",
 		"vscodeLmWarning": "الميزة تجريبية جدًا والدعم يختلف حسب المزوّد.",
 		"googleCloudSetup": {

@@ -348,6 +348,13 @@
 				"description": "Gemini가 최신 정보를 얻기 위해 Google을 검색하고 응답을 실시간 데이터에 근거하도록 합니다. 최신 정보가 필요한 쿼리에 유용합니다."
 			}
 		},
+		"gemini": {
+			"useMultipleApiKeys": "여러 API 키 사용 (라운드 로빈)",
+			"multipleApiKeysDescription": "더 나은 속도 제한과 안정성을 위해 여러 API 키 간의 라운드 로빈 순환을 활성화합니다.",
+			"multipleApiKeysLabel": "여러 Gemini API 키",
+			"multipleApiKeysPlaceholder": "API 키를 한 줄에 하나씩 입력하세요:\nAIzaSyC1234567890abcdef\nAIzaSyD234567890abcdef1\nAIzaSyE34567890abcdef12",
+			"multipleApiKeysInstructions": "한 줄에 하나의 API 키를 입력하세요. 키는 실패 시 폴백과 함께 자동으로 순환됩니다."
+		},
 		"googleCloudSetup": {
 			"title": "Google Cloud Vertex AI를 사용하려면:",
 			"step1": "1. Google Cloud 계정을 만들고, Vertex AI API를 활성화하고, 원하는 Claude 모델을 활성화하세요.",

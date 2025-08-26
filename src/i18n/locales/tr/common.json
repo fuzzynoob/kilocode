@@ -111,6 +111,9 @@
 		"gemini": {
 			"generate_stream": "Gemini oluşturma bağlam akışı hatası: {{error}}",
 			"generate_complete_prompt": "Gemini tamamlama hatası: {{error}}",
+			"no_api_key": "Gemini API anahtarı yapılandırılmamış. Lütfen ayarlarda en az bir API anahtarı ekleyin.",
+			"no_available_keys": "Kullanılabilir Gemini API anahtarı yok. Yapılandırılmış tüm anahtarlar başarısız oldu.",
+			"all_keys_failed": "Tüm {{keyCount}} Gemini API anahtarı başarısız oldu. Son hata: {{error}}",
 			"sources": "Kaynaklar:"
 		},
 		"cerebras": {

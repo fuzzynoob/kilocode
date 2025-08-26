@@ -113,6 +113,9 @@
 		"gemini": {
 			"generate_stream": "Помилка генерації контекстного потоку Gemini: {{error}}",
 			"generate_complete_prompt": "Помилка завершення Gemini: {{error}}",
+			"no_api_key": "Не налаштовано API-ключ Gemini. Додайте хоча б один API-ключ у налаштуваннях.",
+			"no_available_keys": "Немає доступних API-ключів Gemini. Усі налаштовані ключі не спрацювали.",
+			"all_keys_failed": "Усі {{keyCount}} API-ключі Gemini не спрацювали. Остання помилка: {{error}}",
 			"sources": "Джерела:"
 		},
 		"cerebras": {

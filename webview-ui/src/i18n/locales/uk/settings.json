@@ -351,6 +351,13 @@
 				"description": "Підключає Gemini до веб-даних у реальному часі через пошук Google для більш точних і актуальних відповідей"
 			}
 		},
+		"gemini": {
+			"useMultipleApiKeys": "Використовувати кілька API-ключів (round-robin)",
+			"multipleApiKeysDescription": "Увімкнути round-robin ротацію між кількома API-ключами для кращого обмеження швидкості та надійності.",
+			"multipleApiKeysLabel": "Кілька API-ключів Gemini",
+			"multipleApiKeysPlaceholder": "Введіть ваші API-ключі, по одному на рядок:\nAIzaSyC1234567890abcdef\nAIzaSyD234567890abcdef1\nAIzaSyE34567890abcdef12",
+			"multipleApiKeysInstructions": "Введіть один API-ключ на рядок. Ключі будуть автоматично ротуватися з fallback при помилках."
+		},
 		"googleCloudSetup": {
 			"title": "Щоб використовувати Google Cloud Vertex AI, вам потрібно:",
 			"step1": "1. Створити обліковий запис Google Cloud, увімкнути Vertex AI API та увімкнути потрібні моделі Claude.",

@@ -108,6 +108,9 @@
 		"gemini": {
 			"generate_stream": "Ошибка потока контекста генерации Gemini: {{error}}",
 			"generate_complete_prompt": "Ошибка завершения Gemini: {{error}}",
+			"no_api_key": "Не настроен API-ключ Gemini. Добавьте хотя бы один API-ключ в настройках.",
+			"no_available_keys": "Нет доступных API-ключей Gemini. Все настроенные ключи не сработали.",
+			"all_keys_failed": "Все {{keyCount}} API-ключей Gemini не сработали. Последняя ошибка: {{error}}",
 			"sources": "Источники:"
 		},
 		"qwenCode": {

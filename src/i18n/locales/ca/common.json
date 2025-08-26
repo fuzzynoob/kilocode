@@ -111,6 +111,9 @@
 		"gemini": {
 			"generate_stream": "Error del flux de context de generació de Gemini: {{error}}",
 			"generate_complete_prompt": "Error de finalització de Gemini: {{error}}",
+			"no_api_key": "No s'ha configurat cap clau API de Gemini. Si us plau, afegiu almenys una clau API a la configuració.",
+			"no_available_keys": "No hi ha claus API de Gemini disponibles. Totes les claus configurades han fallat.",
+			"all_keys_failed": "Totes les {{keyCount}} claus API de Gemini han fallat. Últim error: {{error}}",
 			"sources": "Fonts:"
 		},
 		"cerebras": {

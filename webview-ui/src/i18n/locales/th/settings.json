@@ -341,6 +341,13 @@
 		"cacheUsageNote": "หมายเหตุ: หากคุณไม่เห็นการใช้งานแคช ให้ลองเลือกโมเดลอื่นแล้วเลือกโมเดลที่คุณต้องการอีกครั้ง",
 		"vscodeLmModel": "โมเดลภาษา",
 		"vscodeLmWarning": "หมายเหตุ: นี่เป็นการผสานรวมที่ทดลองมากและการสนับสนุนจากผู้ให้บริการจะแตกต่างกันไป หากคุณได้รับข้อผิดพลาดเกี่ยวกับโมเดลที่ไม่รองรับ นั่นเป็นปัญหาจากฝั่งผู้ให้บริการ",
+		"gemini": {
+			"useMultipleApiKeys": "ใช้ API key หลายตัว (round-robin)",
+			"multipleApiKeysDescription": "เปิดใช้การหมุนเวียน round-robin ระหว่าง API key หลายตัวเพื่อการจำกัดอัตราและความน่าเชื่อถือที่ดีขึ้น",
+			"multipleApiKeysLabel": "API key ของ Gemini หลายตัว",
+			"multipleApiKeysPlaceholder": "ใส่ API key ของคุณ หนึ่งตัวต่อบรรทัด:\nAIzaSyC1234567890abcdef\nAIzaSyD234567890abcdef1\nAIzaSyE34567890abcdef12",
+			"multipleApiKeysInstructions": "ใส่ API key หนึ่งตัวต่อบรรทัด key จะถูกหมุนเวียนโดยอัตโนมัติพร้อม fallback เมื่อเกิดข้อผิดพลาด"
+		},
 		"googleCloudSetup": {
 			"title": "ในการใช้ Google Cloud Vertex AI คุณต้อง:",
 			"step1": "1. สร้างบัญชี Google Cloud เปิดใช้งาน Vertex AI API และเปิดใช้งานโมเดล Claude ที่ต้องการ",

@@ -348,6 +348,13 @@
 				"description": "Connecta Gemini a dades web en temps real per a respostes precises i actualitzades amb citacions verificables."
 			}
 		},
+		"gemini": {
+			"useMultipleApiKeys": "Utilitzar múltiples claus API (round-robin)",
+			"multipleApiKeysDescription": "Habilitar la rotació round-robin entre múltiples claus API per a millor limitació de velocitat i fiabilitat.",
+			"multipleApiKeysLabel": "Múltiples claus API de Gemini",
+			"multipleApiKeysPlaceholder": "Introduïu les vostres claus API, una per línia:\nAIzaSyC1234567890abcdef\nAIzaSyD234567890abcdef1\nAIzaSyE34567890abcdef12",
+			"multipleApiKeysInstructions": "Introduïu una clau API per línia. Les claus es rotaran automàticament amb fallback en cas de fallades."
+		},
 		"googleCloudSetup": {
 			"title": "Per utilitzar Google Cloud Vertex AI, necessiteu:",
 			"step1": "1. Crear un compte de Google Cloud, habilitar l'API de Vertex AI i habilitar els models Claude necessaris.",
