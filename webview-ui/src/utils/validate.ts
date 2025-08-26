@@ -68,17 +68,19 @@ function validateModelsAndKeysProvided(apiConfiguration: ProviderSettings): stri
 				return i18next.t("settings:validation.googleCloud")
 			}
 			break
-		case "gemini":
+		case "gemini": {
 			// Check for either single key or multiple keys
 			const hasSingleKey = apiConfiguration.geminiApiKey && apiConfiguration.geminiApiKey.trim()
-			const hasMultipleKeys = apiConfiguration.geminiApiKeys && 
-				apiConfiguration.geminiApiKeys.trim() && 
-				apiConfiguration.geminiApiKeys.split(/\r?\n/).some(key => key.trim().length > 0)
-			
+			const hasMultipleKeys =
+				apiConfiguration.geminiApiKeys &&
+				apiConfiguration.geminiApiKeys.trim() &&
+				apiConfiguration.geminiApiKeys.split(/\r?\n/).some((key) => key.trim().length > 0)
+
 			if (!hasSingleKey && !hasMultipleKeys) {
 				return i18next.t("settings:validation.apiKey")
 			}
 			break
+		}
 		// kilocode_change start
 		case "gemini-cli":
 			// OAuth-based provider, no API key validation needed

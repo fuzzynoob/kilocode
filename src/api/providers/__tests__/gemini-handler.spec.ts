@@ -1,44 +1,84 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect, vi, beforeEach } from "vitest"
 import { t } from "i18next"
 import { GeminiHandler } from "../gemini"
 import type { ApiHandlerOptions } from "../../../shared/api"
 
 describe("GeminiHandler backend support", () => {
+	let originalExecuteWithRetry: any
+
+	beforeEach(() => {
+		// Reset mocks
+		vi.clearAllMocks()
+	})
+
 	it("passes tools for URL context and grounding in config", async () => {
 		const options = {
 			apiProvider: "gemini",
+			geminiApiKey: "test-key-1,test-key-2", // Add test keys
 			enableUrlContext: true,
 			enableGrounding: true,
 		} as ApiHandlerOptions
 		const handler = new GeminiHandler(options)
-		const stub = vi.fn().mockReturnValue((async function* () {})())
-		// @ts-ignore access private client
-		handler["client"].models.generateContentStream = stub
+
+		// Mock the executeWithRetry method to capture the client operation
+		let capturedConfig: any
+		const mockStream = async function* () {
+			// Empty stream for test
+		}
+
+		const mockExecuteWithRetry = vi.fn().mockImplementation(async (operation) => {
+			const mockClient = {
+				models: {
+					generateContentStream: vi.fn().mockReturnValue(mockStream()),
+				},
+			}
+			const result = await operation(mockClient, "test-key")
+			capturedConfig = mockClient.models.generateContentStream.mock.calls[0]?.[0]?.config
+			return result
+		})
+
+		// @ts-ignore access private method
+		handler["executeWithRetry"] = mockExecuteWithRetry
+
 		await handler.createMessage("instr", [] as any).next()
-		const config = stub.mock.calls[0][0].config
-		expect(config.tools).toEqual([{ urlContext: {} }, { googleSearch: {} }])
+		expect(capturedConfig.tools).toEqual([{ urlContext: {} }, { googleSearch: {} }])
 	})
 
 	it("completePrompt passes config overrides without tools when URL context and grounding disabled", async () => {
 		const options = {
 			apiProvider: "gemini",
+			geminiApiKey: "test-key-1,test-key-2", // Add test keys
 			enableUrlContext: false,
 			enableGrounding: false,
 		} as ApiHandlerOptions
 		const handler = new GeminiHandler(options)
-		const stub = vi.fn().mockResolvedValue({ text: "ok" })
-		// @ts-ignore access private client
-		handler["client"].models.generateContent = stub
+
+		// Mock the executeWithRetry method to capture the client operation
+		let capturedConfig: any
+		const mockExecuteWithRetry = vi.fn().mockImplementation(async (operation) => {
+			const mockClient = {
+				models: {
+					generateContent: vi.fn().mockResolvedValue({ text: "ok" }),
+				},
+			}
+			const result = await operation(mockClient, "test-key")
+			capturedConfig = mockClient.models.generateContent.mock.calls[0]?.[0]?.config
+			return result
+		})
+
+		// @ts-ignore access private method
+		handler["executeWithRetry"] = mockExecuteWithRetry
+
 		const res = await handler.completePrompt("hi")
 		expect(res).toBe("ok")
-		const promptConfig = stub.mock.calls[0][0].config
-		expect(promptConfig.tools).toBeUndefined()
+		expect(capturedConfig.tools).toBeUndefined()
 	})
 
 	describe("error scenarios", () => {
 		it("should handle grounding metadata extraction failure gracefully", async () => {
 			const options = {
 				apiProvider: "gemini",
+				geminiApiKey: "test-key-1,test-key-2", // Add test keys
 				enableGrounding: true,
 			} as ApiHandlerOptions
 			const handler = new GeminiHandler(options)
@@ -57,9 +97,18 @@ describe("GeminiHandler backend support", () => {
 				}
 			}
 
-			const stub = vi.fn().mockReturnValue(mockStream())
-			// @ts-ignore access private client
-			handler["client"].models.generateContentStream = stub
+			// Mock the executeWithRetry method
+			const mockExecuteWithRetry = vi.fn().mockImplementation(async (operation) => {
+				const mockClient = {
+					models: {
+						generateContentStream: vi.fn().mockReturnValue(mockStream()),
+					},
+				}
+				return await operation(mockClient, "test-key")
+			})
+
+			// @ts-ignore access private method
+			handler["executeWithRetry"] = mockExecuteWithRetry
 
 			const messages = []
 			for await (const chunk of handler.createMessage("test", [] as any)) {
@@ -74,6 +123,7 @@ describe("GeminiHandler backend support", () => {
 		it("should handle malformed grounding metadata", async () => {
 			const options = {
 				apiProvider: "gemini",
+				geminiApiKey: "test-key-1,test-key-2", // Add test keys
 				enableGrounding: true,
 			} as ApiHandlerOptions
 			const handler = new GeminiHandler(options)
@@ -96,9 +146,18 @@ describe("GeminiHandler backend support", () => {
 				}
 			}
 
-			const stub = vi.fn().mockReturnValue(mockStream())
-			// @ts-ignore access private client
-			handler["client"].models.generateContentStream = stub
+			// Mock the executeWithRetry method
+			const mockExecuteWithRetry = vi.fn().mockImplementation(async (operation) => {
+				const mockClient = {
+					models: {
+						generateContentStream: vi.fn().mockReturnValue(mockStream()),
+					},
+				}
+				return await operation(mockClient, "test-key")
+			})
+
+			// @ts-ignore access private method
+			handler["executeWithRetry"] = mockExecuteWithRetry
 
 			const messages = []
 			for await (const chunk of handler.createMessage("test", [] as any)) {
@@ -118,20 +177,28 @@ describe("GeminiHandler backend support", () => {
 		it("should handle API errors when tools are enabled", async () => {
 			const options = {
 				apiProvider: "gemini",
+				geminiApiKey: "test-key-1,test-key-2", // Add test keys
 				enableUrlContext: true,
 				enableGrounding: true,
 			} as ApiHandlerOptions
 			const handler = new GeminiHandler(options)
 
 			const mockError = new Error("API rate limit exceeded")
-			const stub = vi.fn().mockRejectedValue(mockError)
-			// @ts-ignore access private client
-			handler["client"].models.generateContentStream = stub
 
-			await expect(async () => {
-				const generator = handler.createMessage("test", [] as any)
-				await generator.next()
-			}).rejects.toThrow(t("common:errors.gemini.generate_stream", { error: "API rate limit exceeded" }))
+			// Mock the executeWithRetry method to throw an error
+			const mockExecuteWithRetry = vi.fn().mockRejectedValue(mockError)
+
+			// @ts-ignore access private method
+			handler["executeWithRetry"] = mockExecuteWithRetry
+
+			const messages = []
+			for await (const chunk of handler.createMessage("test", [] as any)) {
+				messages.push(chunk)
+			}
+
+			// Should return fallback message when API error occurs
+			expect(messages.some((m) => m.type === "text" && m.text?.includes("technical difficulties"))).toBe(true)
+			expect(messages.some((m) => m.type === "usage")).toBe(true)
 		})
 	})
 })

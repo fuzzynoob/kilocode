@@ -31,7 +31,7 @@ export class GeminiKeyManager {
 
 		// Find the next available key that hasn't failed
 		const availableKeys = this.keys.filter((key) => !this.failedKeys.has(key))
-		
+
 		if (availableKeys.length === 0) {
 			// All keys have failed, reset failed keys and start over
 			this.failedKeys.clear()
@@ -45,15 +45,54 @@ export class GeminiKeyManager {
 			const key = this.keys[this.currentIndex]
 
 			if (!this.failedKeys.has(key)) {
+				// Key found - return it without incrementing index
+				// The index will be incremented when getNextKey() is called
 				return key
 			}
-			
+
 			this.currentIndex = (this.currentIndex + 1) % this.keys.length
 			attempts++
 		}
 
 		// Fallback - shouldn't reach here but return first available key
 		return availableKeys[0] || null
+	}
+
+	/**
+	 * Randomize the order of keys (called at the start of a prompt session)
+	 * This shuffles the available keys and resets the current index
+	 */
+	shuffleKeys(): void {
+		if (this.keys.length <= 1) {
+			return
+		}
+
+		// Get available keys (non-failed)
+		const availableKeys = this.keys.filter((key) => !this.failedKeys.has(key))
+		const failedKeys = this.keys.filter((key) => this.failedKeys.has(key))
+
+		if (availableKeys.length === 0) {
+			// All keys have failed, reset failed keys and shuffle all
+			this.failedKeys.clear()
+			this.shuffleArray(this.keys)
+		} else {
+			// Shuffle only available keys, then append failed keys at the end
+			this.shuffleArray(availableKeys)
+			this.keys = [...availableKeys, ...failedKeys]
+		}
+
+		// Reset index to start from the beginning of shuffled list
+		this.currentIndex = 0
+	}
+
+	/**
+	 * Fisher-Yates shuffle algorithm to randomize array in place
+	 */
+	private shuffleArray(array: string[]): void {
+		for (let i = array.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1))
+			;[array[i], array[j]] = [array[j], array[i]]
+		}
 	}
 
 	/**
@@ -67,6 +106,40 @@ export class GeminiKeyManager {
 		// Move to next key and return it
 		this.currentIndex = (this.currentIndex + 1) % this.keys.length
 		return this.getCurrentKey()
+	}
+
+	/**
+	 * Force move to next available key (used when current key fails)
+	 */
+	moveToNextAvailableKey(): string | null {
+		if (this.keys.length === 0) {
+			return null
+		}
+
+		const availableKeys = this.keys.filter((key) => !this.failedKeys.has(key))
+
+		if (availableKeys.length === 0) {
+			// All keys have failed, reset and start over
+			this.failedKeys.clear()
+			this.currentIndex = 0
+			return this.keys[0] || null
+		}
+
+		// Find next available key
+		let attempts = 0
+		while (attempts < this.keys.length) {
+			this.currentIndex = (this.currentIndex + 1) % this.keys.length
+			const key = this.keys[this.currentIndex]
+
+			if (!this.failedKeys.has(key)) {
+				return key
+			}
+
+			attempts++
+		}
+
+		// Should not reach here, but fallback to first available
+		return availableKeys[0] || null
 	}
 
 	/**
@@ -138,7 +211,7 @@ export class GeminiKeyManager {
 		if (index !== -1) {
 			this.keys.splice(index, 1)
 			this.failedKeys.delete(key)
-			
+
 			// Adjust currentIndex if necessary
 			if (this.currentIndex >= this.keys.length && this.keys.length > 0) {
 				this.currentIndex = 0

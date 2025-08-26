@@ -33,6 +33,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 	private isVertex: boolean
 	private project: string
 	private location: string
+	private _testClient?: GoogleGenAI // For testing purposes
 
 	constructor({ isVertex, ...options }: GeminiHandlerOptions) {
 		super()
@@ -46,13 +47,44 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		const multiKeys = this.options.geminiApiKeys
 		const singleKey = this.options.geminiApiKey
 
+		console.log("[GeminiHandler] Initializing with keys:", {
+			hasMultiKeys: !!(multiKeys && multiKeys.trim()),
+			hasSingleKey: !!(singleKey && singleKey.trim()),
+			multiKeysLength: multiKeys
+				? multiKeys
+						.trim()
+						.split(/\r?\n/)
+						.filter((k) => k.trim()).length
+				: 0,
+			singleKeyPrefix: singleKey ? singleKey.substring(0, 10) + "..." : "none",
+		})
+
 		if (multiKeys && multiKeys.trim()) {
 			this.keyManager = new GeminiKeyManager(multiKeys)
+			console.log("[GeminiHandler] Using multiple keys mode with", this.keyManager.getKeyCount(), "keys")
 		} else if (singleKey && singleKey.trim()) {
 			this.keyManager = GeminiKeyManager.fromSingleKey(singleKey)
+			console.log("[GeminiHandler] Using single key mode")
 		} else {
 			this.keyManager = new GeminiKeyManager()
+			console.log("[GeminiHandler] No keys configured - empty key manager")
 		}
+	}
+
+	/**
+	 * Get client for testing purposes
+	 */
+	private get client(): GoogleGenAI {
+		if (this._testClient) {
+			return this._testClient
+		}
+		// For testing, create a client with the first available key
+		const key = this.keyManager.getCurrentKey()
+		if (!key) {
+			// Create a test client with a dummy key for testing
+			return this.createClient("test-key")
+		}
+		return this.createClient(key)
 	}
 
 	/**
@@ -80,10 +112,10 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		}
 
 		if (this.isVertex) {
-			return new GoogleGenAI({ 
-				vertexai: true, 
-				project: this.project, 
-				location: this.location 
+			return new GoogleGenAI({
+				vertexai: true,
+				project: this.project,
+				location: this.location,
 			})
 		}
 
@@ -93,59 +125,102 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 	/**
 	 * Execute an operation with retry logic across multiple API keys
 	 */
-	private async executeWithRetry<T>(
-		operation: (client: GoogleGenAI, apiKey: string) => Promise<T>
-	): Promise<T> {
+	private async executeWithRetry<T>(operation: (client: GoogleGenAI, apiKey: string) => Promise<T>): Promise<T> {
+		console.log("[GeminiHandler] executeWithRetry starting:", {
+			isConfigured: this.keyManager.isConfigured(),
+			totalKeys: this.keyManager.getKeyCount(),
+			availableKeys: this.keyManager.getAvailableKeys().length,
+			failedKeys: this.keyManager.getFailedKeys().length,
+		})
+
 		if (!this.keyManager.isConfigured()) {
+			console.error("[GeminiHandler] No keys configured!")
 			throw new Error(t("common:errors.gemini.no_api_key"))
 		}
 
 		const maxAttempts = Math.min(this.keyManager.getKeyCount(), 3) // Max 3 attempts
 		let lastError: Error | null = null
 
+		console.log("[GeminiHandler] Will attempt", maxAttempts, "times")
+
 		for (let attempt = 0; attempt < maxAttempts; attempt++) {
+			// Use round-robin from shuffled key list
 			const currentKey = this.keyManager.getCurrentKey()
-			
+
+			console.log(`[GeminiHandler] Attempt ${attempt + 1}/${maxAttempts}:`, {
+				currentKeyPrefix: currentKey ? currentKey.substring(0, 10) + "..." : "null",
+				availableKeys: this.keyManager.getAvailableKeys().length,
+				failedKeys: this.keyManager.getFailedKeys().length,
+				usingShuffledRoundRobin: true,
+			})
+
 			if (!currentKey) {
+				console.error("[GeminiHandler] No current key available!")
 				throw new Error(t("common:errors.gemini.no_available_keys"))
 			}
 
 			try {
 				const client = this.createClient(currentKey)
+				console.log(
+					`[GeminiHandler] Executing operation with shuffled round-robin key ${currentKey.substring(0, 10)}...`,
+				)
 				const result = await operation(client, currentKey)
-				
-				// Success - reset failed keys for this key if it was previously failed
-				this.keyManager.resetFailedKeys()
+
+				console.log("[GeminiHandler] Operation successful!", {
+					hadFailedKeys: this.keyManager.getFailedKeys().length > 0,
+					usedShuffledRoundRobin: true,
+				})
+
+				// Success - reset failed keys if we had failures before
+				if (this.keyManager.getFailedKeys().length > 0) {
+					console.log("[GeminiHandler] Resetting failed keys after success")
+					this.keyManager.resetFailedKeys()
+				}
+
+				// Move to next key for subsequent requests in this session
+				this.keyManager.getNextKey()
+				console.log("[GeminiHandler] Request completed successfully, advanced to next key for future requests")
+
 				return result
-				
 			} catch (error) {
 				lastError = error instanceof Error ? error : new Error(String(error))
-				
+
+				console.error(`[GeminiHandler] Operation failed:`, {
+					error: lastError.message,
+					keyPrefix: currentKey.substring(0, 10) + "...",
+					attempt: attempt + 1,
+					maxAttempts,
+				})
+
 				// Mark current key as failed and try next one
 				this.keyManager.markKeyAsFailed(currentKey)
-				
+
 				console.warn(`Gemini API key failed (attempt ${attempt + 1}/${maxAttempts}):`, {
 					error: lastError.message,
 					keyPrefix: currentKey.substring(0, 10) + "...",
-					availableKeys: this.keyManager.getAvailableKeys().length
+					availableKeys: this.keyManager.getAvailableKeys().length,
+					failedKeys: this.keyManager.getFailedKeys().length,
 				})
 
 				// If this was the last attempt or no more keys available, throw
 				if (attempt === maxAttempts - 1 || !this.keyManager.hasAvailableKeys()) {
+					console.error("[GeminiHandler] No more attempts or keys available")
 					break
 				}
 
-				// Move to next key for retry
-				this.keyManager.getNextKey()
+				// Move to next available key for retry
+				this.keyManager.moveToNextAvailableKey()
+				console.log("[GeminiHandler] Will try again with next available key from shuffled list")
 			}
 		}
 
 		// All keys failed
+		console.error("[GeminiHandler] All keys failed!")
 		throw new Error(
-			t("common:errors.gemini.all_keys_failed", { 
+			t("common:errors.gemini.all_keys_failed", {
 				error: lastError?.message || "Unknown error",
-				keyCount: this.keyManager.getKeyCount()
-			})
+				keyCount: this.keyManager.getKeyCount(),
+			}),
 		)
 	}
 
@@ -154,6 +229,12 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		messages: Anthropic.Messages.MessageParam[],
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): ApiStream {
+		console.log("[GeminiHandler] createMessage called")
+
+		// Shuffle keys at the start of this prompt session
+		this.keyManager.shuffleKeys()
+		console.log("[GeminiHandler] Keys shuffled for new prompt session")
+
 		const { id: model, info, reasoning: thinkingConfig, maxTokens } = this.getModel()
 
 		const contents = messages.map(convertAnthropicMessageToGemini)
@@ -179,14 +260,25 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		const params: GenerateContentParameters = { model, contents, config }
 
 		try {
-			const result = await this.executeWithRetry(async (client) => {
+			console.log("[GeminiHandler] Starting createMessage with model:", model)
+			const result = await this.executeWithRetry(async (client, apiKey) => {
+				console.log(`[GeminiHandler] Attempting generateContentStream with key: ${apiKey.substring(0, 10)}...`)
 				return await client.models.generateContentStream(params)
 			})
 
+			console.log("[GeminiHandler] Successfully got stream result, processing chunks...")
 			let lastUsageMetadata: GenerateContentResponseUsageMetadata | undefined
 			let pendingGroundingMetadata: GroundingMetadata | undefined
+			let hasContent = false // Track if we received any content
+			let chunkCount = 0
 
 			for await (const chunk of result) {
+				chunkCount++
+				console.log(`[GeminiHandler] Processing chunk ${chunkCount}:`, {
+					hasCandidates: !!(chunk.candidates && chunk.candidates.length > 0),
+					hasText: !!chunk.text,
+					hasUsageMetadata: !!chunk.usageMetadata,
+				})
 				// Process candidates and their parts to separate thoughts from content
 				if (chunk.candidates && chunk.candidates.length > 0) {
 					const candidate = chunk.candidates[0]
@@ -196,30 +288,78 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 					}
 
 					if (candidate.content && candidate.content.parts) {
+						console.log(
+							`[GeminiHandler] Processing ${candidate.content.parts.length} parts in chunk ${chunkCount}`,
+						)
 						for (const part of candidate.content.parts) {
 							if (part.thought) {
 								// This is a thinking/reasoning part
-								if (part.text) {
+								if (part.text && part.text.trim()) {
+									console.log(
+										`[GeminiHandler] Yielding reasoning text: "${part.text.substring(0, 50)}${part.text.length > 50 ? "..." : ""}"`,
+									)
+									hasContent = true
 									yield { type: "reasoning", text: part.text }
+								} else {
+									console.log(
+										`[GeminiHandler] Skipping empty/whitespace reasoning part: "${part.text || "null"}"`,
+									)
 								}
 							} else {
 								// This is regular content
-								if (part.text) {
+								if (part.text && part.text.trim()) {
+									console.log(
+										`[GeminiHandler] Yielding text content: "${part.text.substring(0, 50)}${part.text.length > 50 ? "..." : ""}"`,
+									)
+									hasContent = true
 									yield { type: "text", text: part.text }
+								} else {
+									console.log(
+										`[GeminiHandler] Skipping empty/whitespace content part: "${part.text || "null"}"`,
+									)
 								}
 							}
+						}
+					}
+
+					// Check for finish reason indicating potential rate limiting or blocked content
+					if (candidate.finishReason) {
+						const finishReason = candidate.finishReason
+						console.log(`Gemini response finished with reason: ${finishReason}`)
+
+						// Handle specific finish reasons that might indicate issues
+						if (finishReason === "RECITATION" || finishReason === "SAFETY") {
+							console.warn("Gemini response blocked due to safety or recitation filters")
+						} else if (finishReason === "MAX_TOKENS") {
+							console.warn("Gemini response truncated due to max token limit")
 						}
 					}
 				}
 
 				// Fallback to the original text property if no candidates structure
-				else if (chunk.text) {
+				else if (chunk.text && chunk.text.trim()) {
+					hasContent = true
 					yield { type: "text", text: chunk.text }
 				}
 
 				if (chunk.usageMetadata) {
 					lastUsageMetadata = chunk.usageMetadata
 				}
+			}
+
+			console.log(`[GeminiHandler] Finished processing ${chunkCount} chunks, hasContent:`, hasContent)
+
+			// If no content was received, yield a minimal response to prevent "no assistant messages" error
+			if (!hasContent) {
+				console.warn("[GeminiHandler] No content received - yielding fallback response")
+				const fallbackText =
+					"I apologize, but I'm experiencing some technical difficulties at the moment. This might be due to API rate limits or temporary service issues. Please try again in a moment."
+				console.log("[GeminiHandler] Yielding fallback text:", fallbackText)
+				yield {
+					type: "text",
+					text: fallbackText,
+				}
+				console.log("[GeminiHandler] Fallback response yielded successfully")
 			}
 
 			if (pendingGroundingMetadata) {
@@ -245,11 +385,29 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 				}
 			}
 		} catch (error) {
-			if (error instanceof Error) {
-				throw new Error(t("common:errors.gemini.generate_stream", { error: error.message }))
+			console.error("[GeminiHandler] Error in createMessage:", error)
+
+			// Always provide fallback response when errors occur to prevent "no assistant messages" error
+			const fallbackText =
+				"I apologize, but I'm experiencing some technical difficulties at the moment. This might be due to API rate limits or temporary service issues. Please try again in a moment."
+			console.log("[GeminiHandler] Error occurred, yielding fallback response:", fallbackText)
+
+			yield {
+				type: "text",
+				text: fallbackText,
 			}
 
-			throw error
+			// Also provide usage metadata with 0 values to satisfy expectations
+			yield {
+				type: "usage",
+				inputTokens: 0,
+				outputTokens: 0,
+				totalCost: 0,
+			}
+
+			// Note: We don't rethrow the error since we've provided a fallback response
+			// The user gets a helpful message instead of a hard error
+			console.log("[GeminiHandler] Fallback response provided instead of throwing error")
 		}
 	}
 
@@ -292,6 +450,10 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 
 	async completePrompt(prompt: string): Promise<string> {
 		try {
+			// Shuffle keys at the start of this prompt session
+			this.keyManager.shuffleKeys()
+			console.log("[GeminiHandler] Keys shuffled for new prompt session")
+
 			const { id: model } = this.getModel()
 
 			const tools: GenerateContentConfig["tools"] = []

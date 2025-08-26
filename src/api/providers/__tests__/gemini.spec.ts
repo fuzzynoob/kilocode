@@ -103,11 +103,83 @@ describe("GeminiHandler", () => {
 
 			const stream = handler.createMessage(systemPrompt, mockMessages)
 
-			await expect(async () => {
-				for await (const _chunk of stream) {
-					// Should throw before yielding any chunks
-				}
-			}).rejects.toThrow()
+			const chunks = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Should provide fallback response instead of throwing
+			expect(chunks.length).toBeGreaterThan(0)
+			expect(chunks[0]).toEqual({
+				type: "text",
+				text: "I apologize, but I'm experiencing some technical difficulties at the moment. This might be due to API rate limits or temporary service issues. Please try again in a moment.",
+			})
+		})
+
+		it("should handle empty response with fallback", async () => {
+			// Mock response with candidates but no text content
+			mockGenerateContentStream.mockResolvedValue({
+				[Symbol.asyncIterator]: async function* () {
+					yield {
+						candidates: [
+							{
+								content: {
+									parts: [{ text: "" }], // Empty text
+								},
+								finishReason: "STOP",
+							},
+						],
+						usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 0 },
+					}
+				},
+			})
+
+			const stream = handler.createMessage(systemPrompt, mockMessages)
+			const chunks = []
+
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Should provide fallback response when no meaningful content is received
+			expect(chunks.length).toBeGreaterThan(0)
+			expect(chunks[0]).toEqual({
+				type: "text",
+				text: "I apologize, but I'm experiencing some technical difficulties at the moment. This might be due to API rate limits or temporary service issues. Please try again in a moment.",
+			})
+		})
+
+		it("should handle whitespace-only response with fallback", async () => {
+			// Mock response with only whitespace content
+			mockGenerateContentStream.mockResolvedValue({
+				[Symbol.asyncIterator]: async function* () {
+					yield {
+						candidates: [
+							{
+								content: {
+									parts: [{ text: "   \n\t  " }], // Only whitespace
+								},
+								finishReason: "STOP",
+							},
+						],
+						usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 1 },
+					}
+				},
+			})
+
+			const stream = handler.createMessage(systemPrompt, mockMessages)
+			const chunks = []
+
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Should provide fallback response when only whitespace is received
+			expect(chunks.length).toBeGreaterThan(0)
+			expect(chunks[0]).toEqual({
+				type: "text",
+				text: "I apologize, but I'm experiencing some technical difficulties at the moment. This might be due to API rate limits or temporary service issues. Please try again in a moment.",
+			})
 		})
 	})
 

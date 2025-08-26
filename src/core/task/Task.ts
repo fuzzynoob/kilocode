@@ -1818,6 +1818,9 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 								totalCost = chunk.totalCost
 								break
 							case "text": {
+								console.log(
+									`[Task] Received text chunk: "${chunk.text.substring(0, 100)}${chunk.text.length > 100 ? "..." : ""}"`,
+								)
 								assistantMessage += chunk.text
 
 								// Parse raw assistant message chunk into content blocks.
@@ -2141,6 +2144,11 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				// tool use since user can exit at any moment and we wouldn't be
 				// able to save the assistant's response.
 				let didEndLoop = false
+
+				console.log(`[Task] Final assistantMessage length: ${assistantMessage.length}`)
+				console.log(
+					`[Task] assistantMessage content preview: "${assistantMessage.substring(0, 200)}${assistantMessage.length > 200 ? "..." : ""}"`,
+				)
 
 				if (assistantMessage.length > 0) {
 					await this.addToApiConversationHistory({
