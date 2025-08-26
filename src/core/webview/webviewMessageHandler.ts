@@ -1106,6 +1106,12 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("fuzzyMatchThreshold", message.value)
 			await provider.postStateToWebview()
 			break
+		// kilocode_change start
+		case "morphApiKey":
+			await updateGlobalState("morphApiKey", message.text)
+			await provider.postStateToWebview()
+			break
+		// kilocode_change end
 		case "updateVSCodeSetting": {
 			const { setting, value } = message
 
@@ -2232,8 +2238,9 @@ export const webviewMessageHandler = async (
 				const uiKind = message.values?.uiKind || "Desktop"
 				const source = uiKind === "Web" ? "web" : uriScheme
 
+				const baseUrl = getKiloBaseUriFromToken(kilocodeToken)
 				const response = await axios.post(
-					`https://kilocode.ai/payments/topup?origin=extension&source=${source}&amount=${credits}`,
+					`${baseUrl}/payments/topup?origin=extension&source=${source}&amount=${credits}`,
 					{},
 					{
 						headers: {
