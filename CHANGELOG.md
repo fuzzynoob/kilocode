@@ -1,5 +1,15 @@
 # kilo-code
 
+## [v4.84.1]
+
+- [#2113](https://github.com/Kilo-Org/kilocode/pull/2113) [`d40b35a`](https://github.com/Kilo-Org/kilocode/commit/d40b35a3a1efcc2fbfca51d4ca64a8da2aa321e5) Thanks [@chrarnoldus](https://github.com/chrarnoldus)! - The model selector below the chat now shows the correct model list for Qwen Code and some other providers
+
+- [#2116](https://github.com/Kilo-Org/kilocode/pull/2116) [`61e18d6`](https://github.com/Kilo-Org/kilocode/commit/61e18d60f54d11d63a64cd674474a68fa398c3b9) Thanks [@chrarnoldus](https://github.com/chrarnoldus)! - Checkpoints now work when using Morph fast apply
+
+- [#2130](https://github.com/Kilo-Org/kilocode/pull/2130) [`78aaf7c`](https://github.com/Kilo-Org/kilocode/commit/78aaf7c4607c5a98174a26b99973e379b87e5893) Thanks [@chrarnoldus](https://github.com/chrarnoldus)! - Added support for Grok Code Fast to the xAI provider
+
+- [#2109](https://github.com/Kilo-Org/kilocode/pull/2109) [`173ecf4`](https://github.com/Kilo-Org/kilocode/commit/173ecf4983449a4b7766ba900f736a57b7d5d525) Thanks [@chrarnoldus](https://github.com/chrarnoldus)! - A solitary "0" that was sometimes shown on the Kilo Code and OpenRouter API provider settings page was removed.
+
 ## [v4.84.0]
 
 - [#1961](https://github.com/Kilo-Org/kilocode/pull/1961) [`d4a7cb6`](https://github.com/Kilo-Org/kilocode/commit/d4a7cb6300d8e00d5889e1079057e43de19ff95e) Thanks [@chrarnoldus](https://github.com/chrarnoldus)! - Updates to the experimental Morph FastApply support
