@@ -42,6 +42,9 @@ import {
 	moonshotDefaultModelId,
 	sambaNovaModels,
 	sambaNovaDefaultModelId,
+	featherlessModels,
+	featherlessDefaultModelId,
+	deepInfraDefaultModelId,
 } from "@roo-code/types"
 import { cerebrasModels, cerebrasDefaultModelId } from "@roo/api"
 import type { ModelRecord, RouterModels } from "@roo/api"
@@ -236,6 +239,18 @@ export const getModelsByProvider = ({
 			return {
 				models: sambaNovaModels,
 				defaultModel: sambaNovaDefaultModelId,
+			}
+		}
+		case "featherless": {
+			return {
+				models: featherlessModels,
+				defaultModel: featherlessDefaultModelId,
+			}
+		}
+		case "deepinfra": {
+			return {
+				models: routerModels.deepinfra,
+				defaultModel: deepInfraDefaultModelId,
 			}
 		}
 		default:

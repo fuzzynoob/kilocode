@@ -19,6 +19,7 @@ import { getKiloBaseUriFromToken } from "../../../shared/kilocode/token"
 import { getOllamaModels } from "./ollama"
 import { getLMStudioModels } from "./lmstudio"
 import { getIOIntelligenceModels } from "./io-intelligence"
+import { getDeepInfraModels } from "./deepinfra" // kilocode_change
 const memoryCache = new NodeCache({ stdTTL: 5 * 60, checkperiod: 5 * 60 })
 
 export /*kilocode_change*/ async function writeModels(router: RouterName, data: ModelRecord) {
@@ -65,7 +66,7 @@ export const getModels = async (options: GetModelsOptions): Promise<ModelRecord>
 				break
 			case "requesty":
 				// Requesty models endpoint requires an API key for per-user custom policies
-				models = await getRequestyModels(options.apiKey)
+				models = await getRequestyModels(options.baseUrl, options.apiKey)
 				break
 			case "glama":
 				models = await getGlamaModels()
@@ -88,6 +89,9 @@ export const getModels = async (options: GetModelsOptions): Promise<ModelRecord>
 							: "/api/openrouter"),
 					headers: options.kilocodeToken ? { Authorization: `Bearer ${options.kilocodeToken}` } : undefined,
 				})
+				break
+			case "deepinfra":
+				models = await getDeepInfraModels(options.apiKey, options.baseUrl)
 				break
 			case "cerebras":
 				models = cerebrasModels
