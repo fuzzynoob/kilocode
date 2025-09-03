@@ -1,15 +1,15 @@
 import type { Anthropic } from "@anthropic-ai/sdk"
 import {
-	GoogleGenAI,
-	type GenerateContentResponseUsageMetadata,
-	type GenerateContentParameters,
+	FinishReason,
 	type GenerateContentConfig,
+	type GenerateContentParameters,
+	type GenerateContentResponseUsageMetadata,
+	GoogleGenAI,
 	type GroundingMetadata,
-	FinishReason, // kilocode_change
 } from "@google/genai"
 import type { JWTInput } from "google-auth-library"
 
-import { type ModelInfo, type GeminiModelId, geminiDefaultModelId, geminiModels } from "@roo-code/types"
+import { geminiDefaultModelId, type GeminiModelId, geminiModels, type ModelInfo } from "@roo-code/types"
 
 import type { ApiHandlerOptions } from "../../shared/api"
 import { safeJsonParse } from "../../shared/safeJsonParse"
@@ -19,7 +19,7 @@ import { t } from "i18next"
 import type { ApiStream } from "../transform/stream"
 import { getModelParams } from "../transform/model-params"
 
-import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
+import type { ApiHandlerCreateMessageMetadata, SingleCompletionHandler } from "../index"
 import { BaseProvider } from "./base-provider"
 import { GeminiKeyManager } from "./gemini-key-manager"
 import { throwMaxCompletionTokensReachedError } from "./kilocode/verifyFinishReason"
@@ -285,11 +285,11 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 				if (chunk.candidates && chunk.candidates.length > 0) {
 					const candidate = chunk.candidates[0]
 
-					// kilocode_change start
-					if (candidate.finishReason === FinishReason.MAX_TOKENS) {
-						throwMaxCompletionTokensReachedError()
-					}
-					// kilocode_change end
+					// // kilocode_change start
+					// if (candidate.finishReason === FinishReason.MAX_TOKENS) {
+					// 	throwMaxCompletionTokensReachedError()
+					// }
+					// // kilocode_change end
 
 					if (candidate.groundingMetadata) {
 						pendingGroundingMetadata = candidate.groundingMetadata
@@ -336,9 +336,9 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 						console.log(`Gemini response finished with reason: ${finishReason}`)
 
 						// Handle specific finish reasons that might indicate issues
-						if (finishReason === "RECITATION" || finishReason === "SAFETY") {
+						if (finishReason === FinishReason.RECITATION || finishReason === FinishReason.SAFETY) {
 							console.warn("Gemini response blocked due to safety or recitation filters")
-						} else if (finishReason === "MAX_TOKENS") {
+						} else if (finishReason === FinishReason.MAX_TOKENS) {
 							console.warn("Gemini response truncated due to max token limit")
 						}
 					}
