@@ -3,7 +3,7 @@
 	"displayName": "%extension.displayName%",
 	"description": "%extension.description%",
 	"publisher": "kilocode",
-	"version": "4.89.0",
+	"version": "4.99.1",
 	"icon": "assets/icons/logo-outline-black.png",
 	"galleryBanner": {
 		"color": "#FFFFFF",
@@ -295,78 +295,6 @@
 				"category": "%configuration.title%"
 			}
 		],
-		"keybindings": [
-			{
-				"command": "kilo-code.focusChatInput",
-				"key": "ctrl+shift+a",
-				"mac": "cmd+shift+a",
-				"when": "true"
-			},
-			{
-				"command": "editor.action.inlineSuggest.commit",
-				"key": "tab",
-				"when": "inlineSuggestionVisible && editorTextFocus && !editorTabMovesFocus && !inSnippetMode && !suggestWidgetVisible && editorLangId != 'markdown'"
-			},
-			{
-				"command": "kilo-code.ghost.applyAllSuggestions",
-				"key": "shift+tab",
-				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.hasSuggestions"
-			},
-			{
-				"command": "kilo-code.ghost.applyCurrentSuggestions",
-				"key": "tab",
-				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.hasSuggestions"
-			},
-			{
-				"command": "kilo-code.ghost.cancelRequest",
-				"key": "escape",
-				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.isProcessing"
-			},
-			{
-				"command": "kilo-code.ghost.cancelSuggestions",
-				"key": "escape",
-				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.hasSuggestions"
-			},
-			{
-				"command": "kilo-code.ghost.goToNextSuggestion",
-				"key": "down",
-				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.hasSuggestions"
-			},
-			{
-				"command": "kilo-code.ghost.goToPreviousSuggestion",
-				"key": "up",
-				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.hasSuggestions"
-			},
-			{
-				"command": "kilo-code.ghost.promptCodeSuggestion",
-				"key": "ctrl+i",
-				"mac": "cmd+i",
-				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.enableQuickInlineTaskKeybinding && !github.copilot.completions.enabled"
-			},
-			{
-				"command": "kilo-code.ghost.generateSuggestions",
-				"key": "ctrl+l",
-				"mac": "cmd+l",
-				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.enableSmartInlineTaskKeybinding && !github.copilot.completions.enabled"
-			},
-			{
-				"command": "kilo-code.ghost.showIncompatibilityExtensionPopup",
-				"key": "ctrl+l",
-				"mac": "cmd+l",
-				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.enableSmartInlineTaskKeybinding && github.copilot.completions.enabled"
-			},
-			{
-				"command": "kilo-code.ghost.showIncompatibilityExtensionPopup",
-				"key": "ctrl+i",
-				"mac": "cmd+i",
-				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.enableQuickInlineTaskKeybinding && github.copilot.completions.enabled"
-			},
-			{
-				"command": "kilo-code.generateTerminalCommand",
-				"key": "ctrl+shift+g",
-				"mac": "cmd+shift+g"
-			}
-		],
 		"menus": {
 			"editor/context": [
 				{
@@ -500,6 +428,93 @@
 				}
 			]
 		},
+		"keybindings": [
+			{
+				"command": "kilo-code.focusChatInput",
+				"key": "ctrl+shift+a",
+				"mac": "cmd+shift+a",
+				"when": "true"
+			},
+			{
+				"command": "editor.action.inlineSuggest.commit",
+				"key": "tab",
+				"when": "inlineSuggestionVisible && editorTextFocus && !editorTabMovesFocus && !inSnippetMode && !suggestWidgetVisible && editorLangId != 'markdown'"
+			},
+			{
+				"command": "kilo-code.ghost.applyAllSuggestions",
+				"key": "shift+tab",
+				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.hasSuggestions"
+			},
+			{
+				"command": "kilo-code.ghost.applyCurrentSuggestions",
+				"key": "tab",
+				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.hasSuggestions"
+			},
+			{
+				"command": "kilo-code.ghost.cancelRequest",
+				"key": "escape",
+				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.isProcessing"
+			},
+			{
+				"command": "kilo-code.ghost.cancelSuggestions",
+				"key": "escape",
+				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.hasSuggestions"
+			},
+			{
+				"command": "kilo-code.ghost.goToNextSuggestion",
+				"key": "down",
+				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.hasSuggestions"
+			},
+			{
+				"command": "kilo-code.ghost.goToPreviousSuggestion",
+				"key": "up",
+				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.hasSuggestions"
+			},
+			{
+				"command": "kilo-code.ghost.promptCodeSuggestion",
+				"key": "ctrl+i",
+				"mac": "cmd+i",
+				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.enableQuickInlineTaskKeybinding && !github.copilot.completions.enabled"
+			},
+			{
+				"command": "kilo-code.ghost.generateSuggestions",
+				"key": "ctrl+l",
+				"mac": "cmd+l",
+				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.enableSmartInlineTaskKeybinding && !github.copilot.completions.enabled"
+			},
+			{
+				"command": "kilo-code.ghost.showIncompatibilityExtensionPopup",
+				"key": "ctrl+l",
+				"mac": "cmd+l",
+				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.enableSmartInlineTaskKeybinding && github.copilot.completions.enabled"
+			},
+			{
+				"command": "kilo-code.ghost.showIncompatibilityExtensionPopup",
+				"key": "ctrl+i",
+				"mac": "cmd+i",
+				"when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && kilocode.ghost.enableQuickInlineTaskKeybinding && github.copilot.completions.enabled"
+			},
+			{
+				"command": "kilo-code.generateTerminalCommand",
+				"key": "ctrl+shift+g",
+				"mac": "cmd+shift+g"
+			},
+			{
+				"command": "kilo-code.addToContext",
+				"key": "cmd+y",
+				"mac": "cmd+y",
+				"win": "ctrl+y",
+				"linux": "ctrl+y",
+				"when": "editorTextFocus && editorHasSelection"
+			},
+			{
+				"command": "kilo-code.toggleAutoApprove",
+				"key": "cmd+alt+a",
+				"mac": "cmd+alt+a",
+				"win": "ctrl+alt+a",
+				"linux": "ctrl+alt+a"
+			}
+		],
 		"submenus": [
 			{
 				"id": "kilo-code.contextMenu",
@@ -539,6 +554,19 @@
 					"minimum": 0,
 					"maximum": 600,
 					"description": "%commands.commandExecutionTimeout.description%"
+				},
+				"kilo-code.commandTimeoutAllowlist": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [],
+					"description": "%commands.commandTimeoutAllowlist.description%"
+				},
+				"kilo-code.preventCompletionWithOpenTodos": {
+					"type": "boolean",
+					"default": false,
+					"description": "%commands.preventCompletionWithOpenTodos.description%"
 				},
 				"kilo-code.vsCodeLmModelSelector": {
 					"type": "object",
@@ -585,6 +613,13 @@
 					"type": "boolean",
 					"default": false,
 					"description": "%settings.newTaskRequireTodos.description%"
+				},
+				"kilo-code.codeIndex.embeddingBatchSize": {
+					"type": "number",
+					"default": 60,
+					"minimum": 1,
+					"maximum": 200,
+					"description": "%settings.codeIndex.embeddingBatchSize.description%"
 				}
 			}
 		},
@@ -602,12 +637,14 @@
 	"scripts": {
 		"lint": "eslint . --ext=ts --max-warnings=0",
 		"check-types": "tsc --noEmit",
-		"pretest": "turbo run bundle --cwd ..",
+		"pretest": "turbo run kilo-code#bundle --cwd ..",
 		"test": "vitest run",
 		"format": "prettier --write .",
 		"bundle": "node esbuild.mjs",
 		"vscode:prepublish": "pnpm bundle --production",
+		"vsix:clean": "rimraf ../bin",
 		"vsix": "mkdirp ../bin && vsce package --no-dependencies --out ../bin",
+		"vsix:unpacked": "mkdirp ../bin-unpacked && unzip -q -o ../bin/kilo-code-*.vsix -d ../bin-unpacked",
 		"publish:marketplace": "vsce publish --no-dependencies && ovsx publish --no-dependencies",
 		"watch:bundle": "pnpm bundle --watch",
 		"watch:tsc": "cd .. && tsc --noEmit --watch --project src/tsconfig.json",
@@ -631,7 +668,7 @@
 		"@roo-code/types": "workspace:^",
 		"@vscode/codicons": "^0.0.36",
 		"async-mutex": "^0.5.0",
-		"axios": "^1.7.4",
+		"axios": "^1.12.0",
 		"cheerio": "^1.0.0",
 		"chokidar": "^4.0.1",
 		"clone-deep": "^4.0.1",
@@ -652,6 +689,8 @@
 		"ignore": "^7.0.3",
 		"is-wsl": "^3.1.0",
 		"isbinaryfile": "^5.0.2",
+		"json5": "^2.2.3",
+		"jsdom": "^26.0.0",
 		"jwt-decode": "^4.0.0",
 		"lodash.debounce": "^4.0.8",
 		"lru-cache": "^11.1.0",
@@ -675,6 +714,7 @@
 		"sanitize-filename": "^1.6.3",
 		"say": "^0.16.0",
 		"serialize-error": "^12.0.0",
+		"shiki": "^3.6.0",
 		"simple-git": "^3.27.0",
 		"socket.io-client": "^4.8.1",
 		"sound-play": "^1.1.0",
@@ -700,10 +740,13 @@
 		"@roo-code/config-eslint": "workspace:^",
 		"@roo-code/config-typescript": "workspace:^",
 		"@types/clone-deep": "^4.0.4",
+		"dotenv": "^16.4.7",
 		"@types/debug": "^4.1.12",
-		"@types/diff": "^5.2.1",
+		"@types/diff": "^5.2.3",
 		"@types/diff-match-patch": "^1.0.36",
 		"@types/glob": "^8.1.0",
+		"@types/json5": "^2.2.0",
+		"@types/jsdom": "^21.1.7",
 		"@types/lodash.debounce": "^4.0.9",
 		"@types/mocha": "^10.0.10",
 		"@types/node": "20.x",

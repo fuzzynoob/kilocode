@@ -7,7 +7,7 @@ import { TaskStatus, taskMetadataSchema } from "./task.js"
 import { globalSettingsSchema } from "./global-settings.js"
 import { providerSettingsWithIdSchema } from "./provider-settings.js"
 import { mcpMarketplaceItemSchema } from "./marketplace.js"
-import { clineMessageSchema } from "./message.js"
+import { clineMessageSchema, queuedMessageSchema, tokenUsageSchema } from "./message.js"
 import { staticAppPropertiesSchema, gitPropertiesSchema } from "./telemetry.js"
 
 /**
@@ -134,6 +134,16 @@ export const organizationCloudSettingsSchema = z.object({
 export type OrganizationCloudSettings = z.infer<typeof organizationCloudSettingsSchema>
 
 /**
+ * OrganizationFeatures
+ */
+
+export const organizationFeaturesSchema = z.object({
+	roomoteControlEnabled: z.boolean().optional(),
+})
+
+export type OrganizationFeatures = z.infer<typeof organizationFeaturesSchema>
+
+/**
  * OrganizationSettings
  */
 
@@ -142,6 +152,7 @@ export const organizationSettingsSchema = z.object({
 	cloudSettings: organizationCloudSettingsSchema.optional(),
 	defaultSettings: organizationDefaultSettingsSchema,
 	allowList: organizationAllowListSchema,
+	features: organizationFeaturesSchema.optional(),
 	hiddenMcps: z.array(z.string()).optional(),
 	hideMarketplaceMcps: z.boolean().optional(),
 	mcps: z.array(mcpMarketplaceItemSchema).optional(),
@@ -162,6 +173,7 @@ export type UserFeatures = z.infer<typeof userFeaturesSchema>
 
 export const userSettingsConfigSchema = z.object({
 	extensionBridgeEnabled: z.boolean().optional(),
+	taskSyncEnabled: z.boolean().optional(),
 })
 
 export type UserSettingsConfig = z.infer<typeof userSettingsConfigSchema>
@@ -227,9 +239,10 @@ export interface AuthService extends EventEmitter<AuthServiceEvents> {
 	broadcast(): void
 
 	// Authentication methods
-	login(): Promise<void>
+	login(landingPageSlug?: string): Promise<void>
 	logout(): Promise<void>
 	handleCallback(code: string | null, state: string | null, organizationId?: string | null): Promise<void>
+	switchOrganization(organizationId: string | null): Promise<void>
 
 	// State methods
 	getState(): AuthState
@@ -241,6 +254,9 @@ export interface AuthService extends EventEmitter<AuthServiceEvents> {
 	getSessionToken(): string | undefined
 	getUserInfo(): CloudUserInfo | null
 	getStoredOrganizationId(): string | null
+
+	// Organization management
+	getOrganizationMemberships(): Promise<CloudOrganizationMembership[]>
 }
 
 /**
@@ -303,6 +319,14 @@ export interface SettingsService {
 	updateUserSettings(settings: Partial<UserSettingsConfig>): Promise<boolean>
 
 	/**
+	 * Determines if task sync/recording is enabled based on organization and user settings
+	 * Organization settings take precedence over user settings.
+	 * User settings default to true if unspecified.
+	 * @returns true if task sync is enabled, false otherwise
+	 */
+	isTaskSyncEnabled(): boolean
+
+	/**
 	 * Dispose of the settings service and clean up resources
 	 */
 	dispose(): void
@@ -359,6 +383,11 @@ export const INSTANCE_TTL_SECONDS = 60
 const extensionTaskSchema = z.object({
 	taskId: z.string(),
 	taskStatus: z.nativeEnum(TaskStatus),
+	taskAsk: clineMessageSchema.optional(),
+	queuedMessages: z.array(queuedMessageSchema).optional(),
+	parentTaskId: z.string().optional(),
+	childTaskId: z.string().optional(),
+	tokenUsage: tokenUsageSchema.optional(),
 	...taskMetadataSchema.shape,
 })
 
@@ -401,6 +430,14 @@ export enum ExtensionBridgeEventName {
 	TaskInteractive = RooCodeEventName.TaskInteractive,
 	TaskResumable = RooCodeEventName.TaskResumable,
 	TaskIdle = RooCodeEventName.TaskIdle,
+
+	TaskPaused = RooCodeEventName.TaskPaused,
+	TaskUnpaused = RooCodeEventName.TaskUnpaused,
+	TaskSpawned = RooCodeEventName.TaskSpawned,
+
+	TaskUserMessage = RooCodeEventName.TaskUserMessage,
+
+	TaskTokenUsageUpdated = RooCodeEventName.TaskTokenUsageUpdated,
 
 	ModeChanged = RooCodeEventName.ModeChanged,
 	ProviderProfileChanged = RooCodeEventName.ProviderProfileChanged,
@@ -461,6 +498,48 @@ export const extensionBridgeEventSchema = z.discriminatedUnion("type", [
 		instance: extensionInstanceSchema,
 		timestamp: z.number(),
 	}),
+
+	z.object({
+		type: z.literal(ExtensionBridgeEventName.TaskPaused),
+		instance: extensionInstanceSchema,
+		timestamp: z.number(),
+	}),
+	z.object({
+		type: z.literal(ExtensionBridgeEventName.TaskUnpaused),
+		instance: extensionInstanceSchema,
+		timestamp: z.number(),
+	}),
+	z.object({
+		type: z.literal(ExtensionBridgeEventName.TaskSpawned),
+		instance: extensionInstanceSchema,
+		timestamp: z.number(),
+	}),
+
+	z.object({
+		type: z.literal(ExtensionBridgeEventName.TaskUserMessage),
+		instance: extensionInstanceSchema,
+		timestamp: z.number(),
+	}),
+
+	z.object({
+		type: z.literal(ExtensionBridgeEventName.TaskTokenUsageUpdated),
+		instance: extensionInstanceSchema,
+		timestamp: z.number(),
+	}),
+
+	z.object({
+		type: z.literal(ExtensionBridgeEventName.ModeChanged),
+		instance: extensionInstanceSchema,
+		mode: z.string(),
+		timestamp: z.number(),
+	}),
+	z.object({
+		type: z.literal(ExtensionBridgeEventName.ProviderProfileChanged),
+		instance: extensionInstanceSchema,
+		providerProfile: z.object({ name: z.string(), provider: z.string().optional() }),
+		timestamp: z.number(),
+	}),
+
 	z.object({
 		type: z.literal(ExtensionBridgeEventName.InstanceRegistered),
 		instance: extensionInstanceSchema,
@@ -474,18 +553,6 @@ export const extensionBridgeEventSchema = z.discriminatedUnion("type", [
 	z.object({
 		type: z.literal(ExtensionBridgeEventName.HeartbeatUpdated),
 		instance: extensionInstanceSchema,
-		timestamp: z.number(),
-	}),
-	z.object({
-		type: z.literal(ExtensionBridgeEventName.ModeChanged),
-		instance: extensionInstanceSchema,
-		mode: z.string(),
-		timestamp: z.number(),
-	}),
-	z.object({
-		type: z.literal(ExtensionBridgeEventName.ProviderProfileChanged),
-		instance: extensionInstanceSchema,
-		providerProfile: z.object({ name: z.string(), provider: z.string().optional() }),
 		timestamp: z.number(),
 	}),
 ])

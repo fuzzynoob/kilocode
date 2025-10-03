@@ -28,11 +28,17 @@
 		"notifications": "通知",
 		"contextManagement": "コンテキスト",
 		"terminal": "ターミナル",
+		"slashCommands": "スラッシュコマンド",
 		"prompts": "プロンプト",
+		"ui": "UI",
 		"experimental": "実験的",
 		"language": "言語",
 		"about": "Kilo Codeについて",
-		"display": "表示"
+		"display": "表示",
+		"ghost": "Ghost"
+	},
+	"slashCommands": {
+		"description": "スラッシュコマンドを管理して、カスタムワークフローやアクションを素早く実行します。<DocsLink>詳細はこちら</DocsLink>"
 	},
 	"prompts": {
 		"description": "プロンプトの強化、コードの説明、問題の修正などの迅速なアクションに使用されるサポートプロンプトを設定します。これらのプロンプトは、Kilo Codeが一般的な開発タスクでより良いサポートを提供するのに役立ちます。"
@@ -128,9 +134,12 @@
 		"searchMinScoreResetTooltip": "デフォルト値（0.4）にリセット",
 		"searchMaxResultsLabel": "最大検索結果数",
 		"searchMaxResultsDescription": "コードベースインデックスをクエリする際に返される検索結果の最大数。値を高くするとより多くのコンテキストが提供されますが、関連性の低い結果が含まれる可能性があります。",
-		"resetToDefault": "デフォルトにリセット"
+		"resetToDefault": "デフォルトにリセット",
+		"cancelling": "キャンセル中...",
+		"cancelIndexingButton": "インデックス作成をキャンセル"
 	},
 	"autoApprove": {
+		"toggleShortcut": "<SettingsLink>IDEの環境設定</SettingsLink>で、この設定のグローバルショートカットを設定できます。",
 		"description": "Kilo Codeが承認なしで自動的に操作を実行できるようにします。AIを完全に信頼し、関連するセキュリティリスクを理解している場合にのみ、これらの設定を有効にしてください。",
 		"enabled": "自動承認が有効",
 		"toggleAriaLabel": "自動承認の切り替え",
@@ -386,9 +395,11 @@
 		"ollama": {
 			"baseUrl": "ベースURL（オプション）",
 			"modelId": "モデルID",
-			"apiKey": "APIキー",
+			"apiKey": "Ollama APIキー",
 			"apiKeyPlaceholder": "APIキーを入力してください",
-			"apiKeyInfo": "APIキーはAuthorizationヘッダーとして送信されます",
+			"apiKeyHelp": "認証されたOllamaインスタンスやクラウドサービス用のオプションAPIキー。ローカルインストールの場合は空のままにしてください。",
+			"numCtx": "コンテキストウィンドウサイズ (num_ctx)",
+			"numCtxHelp": "モデルのデフォルトのコンテキストウィンドウサイズを上書きします。モデルのModelfile構成を使用するには、空のままにします。最小値は128です。",
 			"description": "Ollamaを使用すると、ローカルコンピューターでモデルを実行できます。始め方については、クイックスタートガイドをご覧ください。",
 			"warning": "注意：Kilo Codeは複雑なプロンプトを使用し、Claudeモデルで最適に動作します。能力の低いモデルは期待通りに動作しない場合があります。"
 		},
@@ -756,12 +767,6 @@
 			"name": "同時ファイル編集を有効にする",
 			"description": "有効にすると、Kilo Codeは単一のリクエストで複数のファイルを編集できます。無効にすると、Kilo Codeはファイルを一つずつ編集する必要があります。これを無効にすることで、能力の低いモデルで作業する場合や、ファイル変更をより細かく制御したい場合に役立ちます。"
 		},
-		"MORPH_FAST_APPLY": {
-			"name": "Morph Fast Applyを有効にする",
-			"description": "有効にすると、Kilo CodeはMorph Fast Applyを使用してファイルを編集できます。Kilo Code APIプロバイダー、OpenRouter、またはMorph APIキーが必要です。",
-			"apiKey": "Morph APIキー（オプション）",
-			"placeholder": "Morph APIキーを入力してください（オプション）"
-		},
 		"PREVENT_FOCUS_DISRUPTION": {
 			"name": "バックグラウンド編集",
 			"description": "有効にすると、エディターのフォーカス中断を防ぎます。ファイル編集は差分ビューを開いたりフォーカスを奪ったりすることなく、バックグラウンドで行われます。Rooが変更を行っている間も中断されることなく作業を続けることができます。ファイルは診断をキャプチャするためにフォーカスなしで開くか、完全に閉じたままにできます。"
@@ -776,7 +781,8 @@
 		},
 		"IMAGE_GENERATION": {
 			"name": "AI画像生成を有効にする",
-			"description": "有効にすると、Kilo Codeはテキストプロンプトから画像を生成できます。Kilo Code または OpenRouter API キーの設定が必要です（OpenRouter が優先されます）。",
+			"description": "有効にすると、Kilo Codeはテキストプロンプトから画像を生成できます。Kilo Code または OpenRouter API キーの設定が必要です。",
+			"apiProvider": "APIプロバイダー",
 			"openRouterApiKeyLabel": "OpenRouter APIキー",
 			"openRouterApiKeyPlaceholder": "OpenRouter APIキーを入力してください",
 			"kiloCodeApiKeyLabel": "Kilo Code APIキー",
@@ -785,12 +791,30 @@
 			"getApiKeyText": "APIキーを取得する場所",
 			"modelSelectionLabel": "画像生成モデル",
 			"modelSelectionDescription": "画像生成に使用するモデルを選択",
-			"warningMissingKey": "⚠️ 画像生成にはKilo CodeまたはOpenRouter APIキーが必要です。上記で設定してください。",
+			"warningMissingKey": "⚠️ 画像生成にはAPIキーが必要です。上記で設定してください。",
 			"successConfigured": "✓ 画像生成が設定され、使用準備完了です"
 		},
 		"INLINE_ASSIST": {
 			"name": "Autocomplete",
 			"description": "エディター内で直接コードの迅速な提案と改善を行うAutocomplete機能を有効にします。ターゲット変更用のクイックタスク（Cmd+I）とコンテキスト改善用のAutocompleteが含まれます。"
+		},
+		"MORPH_FAST_APPLY": {
+			"name": "Fast Applyを有効化",
+			"description": "有効にすると、Kilo Codeはコード変更に最適化された専用モデルを使用してFast Applyでファイルを編集できます。Kilo Code APIプロバイダー、OpenRouter、またはMorph APIキーが必要です。",
+			"apiKey": "Morph APIキー（オプション）",
+			"placeholder": "Morph APIキーを入力してください（オプション）",
+			"modelLabel": "モデル選択",
+			"modelDescription": "ファイル編集に使用するFast Applyモデルを選択",
+			"models": {
+				"auto": "自動（デフォルト - 最適なものを選択）",
+				"morphFast": "Morph v3 Fast（高速、低コスト）",
+				"morphLarge": "Morph v3 Large（より高性能）",
+				"relace": "Relace Apply v3"
+			}
+		},
+		"RUN_SLASH_COMMAND": {
+			"name": "モデル開始スラッシュコマンドを有効にする",
+			"description": "有効にすると、Kilo Codeがワークフローを実行するためにあなたのスラッシュコマンドを実行できます。"
 		}
 	},
 	"promptCaching": {
@@ -906,9 +930,36 @@
 			"description": "タスクメッセージの視覚的なタイムラインを表示し、種類ごとに色分けすることで、タスクの進捗状況を素早く確認したり、タスク履歴の特定のポイントまでスクロールバックしたりすることができます。"
 		}
 	},
+	"ghost": {
+		"showGutterAnimation": {
+			"label": "オートコンプリート時にガターアニメーションを表示",
+			"description": "オートコンプリートの実行中にエディタガターにアニメーションインジケータを表示",
+			"preview": "アニメーションプレビュー"
+		}
+	},
 	"includeMaxOutputTokens": "最大出力トークンを含める",
 	"includeMaxOutputTokensDescription": "APIリクエストで最大出力トークンパラメータを送信します。一部のプロバイダーはこれをサポートしていない場合があります。",
 	"limitMaxTokensDescription": "レスポンスの最大トークン数を制限する",
 	"maxOutputTokensLabel": "最大出力トークン",
-	"maxTokensGenerateDescription": "レスポンスで生成する最大トークン数"
+	"maxTokensGenerateDescription": "レスポンスで生成する最大トークン数",
+	"serviceTier": {
+		"label": "サービスティア",
+		"tooltip": "APIリクエストをより速く処理するには、優先処理サービスティアをお試しください。低価格でレイテンシが高い場合は、フレックス処理ティアをお試しください。",
+		"standard": "標準",
+		"flex": "フレックス",
+		"priority": "優先",
+		"pricingTableTitle": "サービスティア別料金（100万トークンあたりの価格）",
+		"columns": {
+			"tier": "ティア",
+			"input": "入力",
+			"output": "出力",
+			"cacheReads": "キャッシュ読み取り"
+		}
+	},
+	"ui": {
+		"collapseThinking": {
+			"label": "デフォルトで思考メッセージを折りたたむ",
+			"description": "有効にすると、操作するまで思考ブロックがデフォルトで折りたたまれます"
+		}
+	}
 }

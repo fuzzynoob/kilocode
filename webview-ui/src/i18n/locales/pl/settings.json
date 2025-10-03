@@ -28,11 +28,16 @@
 		"notifications": "Powiadomienia",
 		"contextManagement": "Kontekst",
 		"terminal": "Terminal",
+		"slashCommands": "Polecenia Slash",
 		"prompts": "Podpowiedzi",
+		"ui": "UI",
 		"experimental": "Eksperymentalne",
 		"language": "Język",
 		"about": "O Kilo Code",
 		"display": "Wyświetl"
+	},
+	"slashCommands": {
+		"description": "Zarządzaj poleceniami slash, aby szybko wykonywać niestandardowe przepływy pracy i akcje. <DocsLink>Dowiedz się więcej</DocsLink>"
 	},
 	"prompts": {
 		"description": "Skonfiguruj podpowiedzi wsparcia używane do szybkich działań, takich jak ulepszanie podpowiedzi, wyjaśnianie kodu i rozwiązywanie problemów. Te podpowiedzi pomagają Kilo Code zapewnić lepsze wsparcie dla typowych zadań programistycznych."
@@ -128,9 +133,12 @@
 		"searchMinScoreResetTooltip": "Zresetuj do wartości domyślnej (0.4)",
 		"searchMaxResultsLabel": "Maksymalna liczba wyników wyszukiwania",
 		"searchMaxResultsDescription": "Maksymalna liczba wyników wyszukiwania zwracanych podczas zapytania do indeksu bazy kodu. Wyższe wartości zapewniają więcej kontekstu, ale mogą zawierać mniej istotne wyniki.",
-		"resetToDefault": "Przywróć domyślne"
+		"resetToDefault": "Przywróć domyślne",
+		"cancelling": "Anulowanie...",
+		"cancelIndexingButton": "Anuluj indeksowanie"
 	},
 	"autoApprove": {
+		"toggleShortcut": "Możesz skonfigurować globalny skrót dla tego ustawienia <SettingsLink>w preferencjach swojego IDE</SettingsLink>.",
 		"description": "Pozwól Kilo Code na automatyczne wykonywanie operacji bez wymagania zatwierdzenia. Włącz te ustawienia tylko jeśli w pełni ufasz AI i rozumiesz związane z tym zagrożenia bezpieczeństwa.",
 		"enabled": "Auto-zatwierdzanie włączone",
 		"toggleAriaLabel": "Przełącz automatyczne zatwierdzanie",
@@ -386,9 +394,11 @@
 		"ollama": {
 			"baseUrl": "URL bazowy (opcjonalnie)",
 			"modelId": "ID modelu",
-			"apiKey": "Klucz API",
+			"apiKey": "Klucz API Ollama",
 			"apiKeyPlaceholder": "Wprowadź swój klucz API",
-			"apiKeyInfo": "Klucz API będzie wysłany jako nagłówek Authorization",
+			"apiKeyHelp": "Opcjonalny klucz API dla uwierzytelnionych instancji Ollama lub usług chmurowych. Pozostaw puste dla instalacji lokalnych.",
+			"numCtx": "Rozmiar okna kontekstu (num_ctx)",
+			"numCtxHelp": "Zastępuje domyślny rozmiar okna kontekstu modelu. Pozostaw puste, aby użyć konfiguracji Modelfile modelu. Minimalna wartość to 128.",
 			"description": "Ollama pozwala na lokalne uruchamianie modeli na twoim komputerze. Aby rozpocząć, zapoznaj się z przewodnikiem szybkiego startu.",
 			"warning": "Uwaga: Kilo Code używa złożonych podpowiedzi i działa najlepiej z modelami Claude. Modele o niższych możliwościach mogą nie działać zgodnie z oczekiwaniami."
 		},
@@ -754,13 +764,21 @@
 		},
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Włącz równoczesne edycje plików",
-			"description": "Gdy włączone, Kilo Code może edytować wiele plików w jednym żądaniu. Gdy wyłączone, Kilo Code musi edytować pliki jeden po drugim. Wyłączenie tego może pomóc podczas pracy z mniej zdolnymi modelami lub gdy chcesz mieć większą kontrolę nad modyfikacjami plików."
+			"description": "Gdy włączone, Kilo Code może edytować wiele plików w jednym żądaniu. Gdy wyłączone, Kilo Code musi edytować pliki jeden po drugim. Wyłączenie tego może pomóc podczas pracy z mniej zdolnymi modelami lub gdy chcesz mieć większą kontrolę nad modyfikacjami plików。"
 		},
 		"MORPH_FAST_APPLY": {
-			"name": "Włącz Morph Fast Apply",
-			"description": "Gdy włączone, Kilo Code może edytować pliki używając Morph Fast Apply. Wymaga Dostawcy API Kilo Code, OpenRouter lub klucza API Morph.",
-			"apiKey": "Klucz API Morph (opcjonalny)",
-			"placeholder": "Wprowadź swój klucz API Morph (opcjonalny)"
+			"name": "Włącz szybkie stosowanie",
+			"description": "Gdy włączone, Kilo Code może edytować pliki za pomocą szybkiego stosowania ze specjalizowanymi modelami zoptymalizowanymi do modyfikacji kodu. Wymaga dostawcy API Kilo Code, OpenRouter lub klucza API Morph.",
+			"apiKey": "Klucz API Morph (opcjonalnie)",
+			"placeholder": "Wprowadź swój klucz API Morph (opcjonalnie)",
+			"modelLabel": "Wybór modelu",
+			"modelDescription": "Wybierz, który model szybkiego stosowania użyć do edycji plików",
+			"models": {
+				"auto": "Automatyczny (Domyślny - wybiera najlepszy dostępny)",
+				"morphFast": "Morph v3 Fast (Szybszy, niższy koszt)",
+				"morphLarge": "Morph v3 Large (Bardziej zaawansowany)",
+				"relace": "Relace Apply v3"
+			}
 		},
 		"PREVENT_FOCUS_DISRUPTION": {
 			"name": "Edycja w tle",
@@ -776,7 +794,8 @@
 		},
 		"IMAGE_GENERATION": {
 			"name": "Włącz generowanie obrazów AI",
-			"description": "Gdy włączone, Kilo Code może generować obrazy z promptów tekstowych. Wymaga skonfigurowanego klucza API Kilo Code lub OpenRouter (OpenRouter ma pierwszeństwo).",
+			"description": "Gdy włączone, Kilo Code może generować obrazy z promptów tekstowych. Wymaga skonfigurowanego klucza API Kilo Code lub OpenRouter.",
+			"apiProvider": "Dostawca API",
 			"openRouterApiKeyLabel": "Klucz API OpenRouter",
 			"openRouterApiKeyPlaceholder": "Wprowadź swój klucz API OpenRouter",
 			"kiloCodeApiKeyLabel": "Klucz API Kilo Code",
@@ -785,12 +804,16 @@
 			"getApiKeyText": "Uzyskaj swój klucz API od",
 			"modelSelectionLabel": "Model generowania obrazów",
 			"modelSelectionDescription": "Wybierz model do generowania obrazów",
-			"warningMissingKey": "⚠️ Klucz API Kilo Code lub OpenRouter jest wymagany do generowania obrazów. Skonfiguruj go powyżej.",
+			"warningMissingKey": "⚠️ Klucz API jest wymagany do generowania obrazów, skonfiguruj go powyżej.",
 			"successConfigured": "✓ Generowanie obrazów jest skonfigurowane i gotowe do użycia"
 		},
 		"INLINE_ASSIST": {
 			"name": "Autocomplete",
 			"description": "Włącz funkcje Autocomplete dla szybkich sugestii kodu i ulepszeń bezpośrednio w twoim edytorze. Zawiera Szybkie Zadanie (Cmd+I) dla ukierunkowanych zmian i Autocomplete dla kontekstowych ulepszeń."
+		},
+		"RUN_SLASH_COMMAND": {
+			"name": "Włącz polecenia slash inicjowane przez model",
+			"description": "Gdy włączone, Kilo Code może uruchamiać twoje polecenia slash w celu wykonywania przepływów pracy."
 		}
 	},
 	"promptCaching": {
@@ -906,9 +929,36 @@
 			"description": "Wyświetlaj wizualną oś czasu wiadomości zadania, oznaczoną kolorami według typu, co pozwala na szybki przegląd postępu zadania i przewijanie do określonych punktów w historii zadania."
 		}
 	},
+	"ghost": {
+		"showGutterAnimation": {
+			"label": "Pokaż animację marginesu podczas autouzupełniania",
+			"description": "Wyświetl animowany wskaźnik w marginesie edytora, gdy autouzupełnianie jest uruchomione",
+			"preview": "Podgląd animacji"
+		}
+	},
 	"includeMaxOutputTokens": "Uwzględnij maksymalne tokeny wyjściowe",
 	"includeMaxOutputTokensDescription": "Wyślij parametr maksymalnych tokenów wyjściowych w żądaniach API. Niektórzy dostawcy mogą tego nie obsługiwać.",
 	"limitMaxTokensDescription": "Ogranicz maksymalną liczbę tokenów w odpowiedzi",
 	"maxOutputTokensLabel": "Maksymalne tokeny wyjściowe",
-	"maxTokensGenerateDescription": "Maksymalne tokeny do wygenerowania w odpowiedzi"
+	"maxTokensGenerateDescription": "Maksymalne tokeny do wygenerowania w odpowiedzi",
+	"serviceTier": {
+		"label": "Poziom usług",
+		"tooltip": "Aby szybciej przetwarzać żądania API, wypróbuj priorytetowy poziom usług. Aby uzyskać niższe ceny przy wyższej latencji, wypróbuj elastyczny poziom usług.",
+		"standard": "Standardowy",
+		"flex": "Elastyczny",
+		"priority": "Priorytetowy",
+		"pricingTableTitle": "Cennik według poziomu usług (cena za 1 mln tokenów)",
+		"columns": {
+			"tier": "Poziom",
+			"input": "Wejście",
+			"output": "Wyjście",
+			"cacheReads": "Odczyty z pamięci podręcznej"
+		}
+	},
+	"ui": {
+		"collapseThinking": {
+			"label": "Domyślnie zwijaj komunikaty o myśleniu",
+			"description": "Gdy włączone, bloki myślenia będą domyślnie zwinięte, dopóki nie wejdziesz z nimi w interakcję"
+		}
+	}
 }

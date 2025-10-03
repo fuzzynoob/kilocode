@@ -28,11 +28,16 @@
 		"notifications": "Notificações",
 		"contextManagement": "Contexto",
 		"terminal": "Terminal",
+		"slashCommands": "Comandos de Barra",
 		"prompts": "Prompts",
+		"ui": "UI",
 		"experimental": "Experimental",
 		"language": "Idioma",
 		"about": "Sobre",
 		"display": "Exibir"
+	},
+	"slashCommands": {
+		"description": "Gerencie seus comandos de barra para executar rapidamente fluxos de trabalho e ações personalizadas. <DocsLink>Saiba mais</DocsLink>"
 	},
 	"prompts": {
 		"description": "Configure prompts de suporte usados para ações rápidas como melhorar prompts, explicar código e corrigir problemas. Esses prompts ajudam o Kilo Code a fornecer melhor assistência para tarefas comuns de desenvolvimento."
@@ -128,9 +133,12 @@
 		"searchMinScoreResetTooltip": "Redefinir para o valor padrão (0.4)",
 		"searchMaxResultsLabel": "Resultados máximos de busca",
 		"searchMaxResultsDescription": "Número máximo de resultados de busca a retornar ao consultar o índice de código. Valores mais altos fornecem mais contexto, mas podem incluir resultados menos relevantes.",
-		"resetToDefault": "Redefinir para o padrão"
+		"resetToDefault": "Redefinir para o padrão",
+		"cancelling": "Cancelando...",
+		"cancelIndexingButton": "Cancelar indexação"
 	},
 	"autoApprove": {
+		"toggleShortcut": "Você pode configurar um atalho global para esta configuração <SettingsLink>nas preferências do seu IDE</SettingsLink>.",
 		"description": "Permitir que o Kilo Code realize operações automaticamente sem exigir aprovação. Ative essas configurações apenas se confiar totalmente na IA e compreender os riscos de segurança associados.",
 		"enabled": "Aprovação automática habilitada",
 		"toggleAriaLabel": "Alternar aprovação automática",
@@ -386,9 +394,11 @@
 		"ollama": {
 			"baseUrl": "URL Base (opcional)",
 			"modelId": "ID do Modelo",
-			"apiKey": "Chave de API",
-			"apiKeyPlaceholder": "Insira sua chave de API",
-			"apiKeyInfo": "A chave de API será enviada como cabeçalho de autorização",
+			"apiKey": "Chave API Ollama",
+			"apiKeyPlaceholder": "Digite sua chave de API",
+			"apiKeyHelp": "Chave API opcional para instâncias Ollama autenticadas ou serviços em nuvem. Deixe vazio para instalações locais.",
+			"numCtx": "Tamanho da janela de contexto (num_ctx)",
+			"numCtxHelp": "Substitui o tamanho da janela de contexto padrão do modelo. Deixe em branco para usar a configuração do Modelfile do modelo. O valor mínimo é 128.",
 			"description": "O Ollama permite que você execute modelos localmente em seu computador. Para instruções sobre como começar, veja o guia de início rápido deles.",
 			"warning": "Nota: O Kilo Code usa prompts complexos e funciona melhor com modelos Claude. Modelos menos capazes podem não funcionar como esperado."
 		},
@@ -754,13 +764,21 @@
 		},
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Habilitar edições de arquivos concorrentes",
-			"description": "Quando habilitado, o Kilo Code pode editar múltiplos arquivos em uma única solicitação. Quando desabilitado, o Kilo Code deve editar arquivos um de cada vez. Desabilitar isso pode ajudar ao trabalhar com modelos menos capazes ou quando você quer mais controle sobre modificações de arquivos."
+			"description": "Quando habilitado, o Kilo Code pode editar múltiplos arquivos em uma única solicitação. Quando desabilitado, o Kilo Code deve editar arquivos um de cada vez. Desabilitar isso pode ajudar ao trabalhar com modelos menos capazes ou quando você quer mais controle sobre modificações de arquivos。"
 		},
 		"MORPH_FAST_APPLY": {
-			"name": "Habilitar Morph Fast Apply",
-			"description": "Quando habilitado, o Kilo Code pode editar arquivos usando Morph Fast Apply. Requer o Provedor de API Kilo Code, OpenRouter ou uma chave de API Morph.",
+			"name": "Habilitar Fast Apply",
+			"description": "Quando habilitado, o Kilo Code pode editar arquivos usando Fast Apply com modelos especializados otimizados para modificações de código. Requer o Provedor de API Kilo Code, OpenRouter ou uma chave de API Morph.",
 			"apiKey": "Chave de API Morph (opcional)",
-			"placeholder": "Digite sua chave de API Morph (opcional)"
+			"placeholder": "Digite sua chave de API Morph (opcional)",
+			"modelLabel": "Seleção de Modelo",
+			"modelDescription": "Escolha qual modelo Fast Apply usar para edições de arquivos",
+			"models": {
+				"auto": "Automático (Padrão - escolhe o melhor disponível)",
+				"morphFast": "Morph v3 Fast (Mais rápido, menor custo)",
+				"morphLarge": "Morph v3 Large (Mais capaz)",
+				"relace": "Relace Apply v3"
+			}
 		},
 		"PREVENT_FOCUS_DISRUPTION": {
 			"name": "Edição em segundo plano",
@@ -776,7 +794,8 @@
 		},
 		"IMAGE_GENERATION": {
 			"name": "Habilitar geração de imagens com IA",
-			"description": "Quando habilitado, Kilo Code pode gerar imagens a partir de prompts de texto. Requer uma chave de API do Kilo Code ou OpenRouter configurada (OpenRouter tem precedência).",
+			"description": "Quando habilitado, Kilo Code pode gerar imagens a partir de prompts de texto. Requer uma chave de API do Kilo Code ou OpenRouter configurada.",
+			"apiProvider": "Provedor de API",
 			"openRouterApiKeyLabel": "Chave de API do OpenRouter",
 			"openRouterApiKeyPlaceholder": "Digite sua chave de API do OpenRouter",
 			"kiloCodeApiKeyLabel": "Chave de API do Kilo Code",
@@ -785,12 +804,16 @@
 			"getApiKeyText": "Obtenha sua chave de API de",
 			"modelSelectionLabel": "Modelo de Geração de Imagens",
 			"modelSelectionDescription": "Selecione o modelo para geração de imagens",
-			"warningMissingKey": "⚠️ A chave de API do Kilo Code ou OpenRouter é necessária para geração de imagens. Configure-a acima.",
+			"warningMissingKey": "⚠️ Uma chave de API é necessária para geração de imagens, configure-a acima.",
 			"successConfigured": "✓ A geração de imagens está configurada e pronta para uso"
 		},
 		"INLINE_ASSIST": {
 			"name": "Autocomplete",
 			"description": "Habilita as funcionalidades do Autocomplete para sugestões de código rápidas e melhorias diretamente no seu editor. Inclui Tarefa Rápida (Cmd+I) para mudanças direcionadas e Autocomplete para melhorias contextuais."
+		},
+		"RUN_SLASH_COMMAND": {
+			"name": "Ativar comandos slash iniciados pelo modelo",
+			"description": "Quando ativado, Kilo Code pode executar seus comandos slash para executar fluxos de trabalho."
 		}
 	},
 	"promptCaching": {
@@ -906,9 +929,36 @@
 			"description": "Exibe uma linha do tempo visual das mensagens de tarefas, coloridas por tipo, permitindo que você visualize rapidamente o progresso da tarefa e volte para pontos específicos no histórico da tarefa."
 		}
 	},
+	"ghost": {
+		"showGutterAnimation": {
+			"label": "Mostrar animação na lateral ao autocompletar",
+			"description": "Exibir indicador animado na lateral do editor quando o autocompletar está em execução",
+			"preview": "Visualização da animação"
+		}
+	},
 	"includeMaxOutputTokens": "Incluir tokens máximos de saída",
 	"includeMaxOutputTokensDescription": "Enviar parâmetro de tokens máximos de saída nas solicitações de API. Alguns provedores podem não suportar isso.",
 	"limitMaxTokensDescription": "Limitar o número máximo de tokens na resposta",
 	"maxOutputTokensLabel": "Tokens máximos de saída",
-	"maxTokensGenerateDescription": "Tokens máximos para gerar na resposta"
+	"maxTokensGenerateDescription": "Tokens máximos para gerar na resposta",
+	"serviceTier": {
+		"label": "Nível de serviço",
+		"tooltip": "Para um processamento mais rápido das solicitações de API, experimente o nível de serviço de processamento prioritário. Para preços mais baixos com maior latência, experimente o nível de processamento flexível.",
+		"standard": "Padrão",
+		"flex": "Flexível",
+		"priority": "Prioritário",
+		"pricingTableTitle": "Preços por nível de serviço (preço por 1 milhão de tokens)",
+		"columns": {
+			"tier": "Nível",
+			"input": "Entrada",
+			"output": "Saída",
+			"cacheReads": "Leituras de cache"
+		}
+	},
+	"ui": {
+		"collapseThinking": {
+			"label": "Recolher mensagens de pensamento por padrão",
+			"description": "Quando ativado, os blocos de pensamento serão recolhidos por padrão até que você interaja com eles"
+		}
+	}
 }

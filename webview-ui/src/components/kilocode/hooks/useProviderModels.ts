@@ -45,8 +45,9 @@ import {
 	featherlessModels,
 	featherlessDefaultModelId,
 	deepInfraDefaultModelId,
+	cerebrasModels,
+	cerebrasDefaultModelId,
 } from "@roo-code/types"
-import { cerebrasModels, cerebrasDefaultModelId } from "@roo/api"
 import type { ModelRecord, RouterModels } from "@roo/api"
 import { useRouterModels } from "../../ui/hooks/useRouterModels"
 import { useExtensionState } from "@/context/ExtensionStateContext"
@@ -187,6 +188,13 @@ export const getModelsByProvider = ({
 				defaultModel: kilocodeDefaultModel,
 			}
 		}
+		// Temporary weird fix
+		case "kilocode-openrouter": {
+			return {
+				models: routerModels["kilocode-openrouter"],
+				defaultModel: kilocodeDefaultModel,
+			}
+		}
 		case "claude-code": {
 			return {
 				models: claudeCodeModels,
@@ -283,7 +291,7 @@ export const useProviderModels = (apiConfiguration?: ProviderSettings) => {
 
 	return {
 		provider,
-		providerModels: models,
+		providerModels: models as ModelRecord,
 		providerDefaultModel: defaultModel,
 		isLoading: routerModels.isLoading,
 		isError: routerModels.isError,

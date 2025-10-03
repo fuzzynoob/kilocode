@@ -28,11 +28,16 @@
 		"notifications": "Notifikasi",
 		"contextManagement": "Konteks",
 		"terminal": "Terminal",
+		"slashCommands": "Perintah Slash",
 		"prompts": "Prompt",
+		"ui": "UI",
 		"experimental": "Eksperimental",
 		"language": "Bahasa",
 		"about": "Tentang Kilo Code",
 		"display": "Tampilkan"
+	},
+	"slashCommands": {
+		"description": "Kelola perintah slash kamu untuk mengeksekusi alur kerja dan tindakan kustom dengan cepat. <DocsLink>Pelajari lebih lanjut</DocsLink>"
 	},
 	"prompts": {
 		"description": "Konfigurasi support prompt yang digunakan untuk aksi cepat seperti meningkatkan prompt, menjelaskan kode, dan memperbaiki masalah. Prompt ini membantu Kilo Code memberikan bantuan yang lebih baik untuk tugas pengembangan umum."
@@ -128,9 +133,12 @@
 		"searchMinScoreResetTooltip": "Reset ke nilai default (0.4)",
 		"searchMaxResultsLabel": "Hasil Pencarian Maksimum",
 		"searchMaxResultsDescription": "Jumlah maksimum hasil pencarian yang dikembalikan saat melakukan query indeks basis kode. Nilai yang lebih tinggi memberikan lebih banyak konteks tetapi mungkin menyertakan hasil yang kurang relevan.",
-		"resetToDefault": "Reset ke default"
+		"resetToDefault": "Reset ke default",
+		"cancelling": "Membatalkan...",
+		"cancelIndexingButton": "Batalkan pengindeksan"
 	},
 	"autoApprove": {
+		"toggleShortcut": "Anda dapat mengonfigurasi pintasan global untuk pengaturan ini <SettingsLink>di preferensi IDE Anda</SettingsLink>.",
 		"description": "Izinkan Kilo Code untuk secara otomatis melakukan operasi tanpa memerlukan persetujuan. Aktifkan pengaturan ini hanya jika kamu sepenuhnya mempercayai AI dan memahami risiko keamanan yang terkait.",
 		"enabled": "Auto-Approve Diaktifkan",
 		"toggleAriaLabel": "Beralih persetujuan otomatis",
@@ -386,9 +394,11 @@
 		"ollama": {
 			"baseUrl": "Base URL (opsional)",
 			"modelId": "Model ID",
-			"apiKey": "API Key",
+			"apiKey": "Ollama API Key",
 			"apiKeyPlaceholder": "Masukkan API key Anda",
-			"apiKeyInfo": "API key akan dikirim sebagai Authorization header",
+			"apiKeyHelp": "API key opsional untuk instance Ollama yang terautentikasi atau layanan cloud. Biarkan kosong untuk instalasi lokal.",
+			"numCtx": "Ukuran Jendela Konteks (num_ctx)",
+			"numCtxHelp": "Ganti ukuran jendela konteks default model. Biarkan kosong untuk menggunakan konfigurasi Modelfile model. Nilai minimum adalah 128.",
 			"description": "Ollama memungkinkan kamu menjalankan model secara lokal di komputer. Untuk instruksi cara memulai, lihat panduan quickstart mereka.",
 			"warning": "Catatan: Kilo Code menggunakan prompt kompleks dan bekerja terbaik dengan model Claude. Model yang kurang mampu mungkin tidak bekerja seperti yang diharapkan."
 		},
@@ -778,10 +788,18 @@
 			"description": "Ketika diaktifkan, Kilo Code dapat mengedit beberapa file dalam satu permintaan. Ketika dinonaktifkan, Kilo Code harus mengedit file satu per satu. Menonaktifkan ini dapat membantu saat bekerja dengan model yang kurang mampu atau ketika kamu ingin kontrol lebih terhadap modifikasi file."
 		},
 		"MORPH_FAST_APPLY": {
-			"name": "Aktifkan Morph Fast Apply",
-			"description": "Ketika diaktifkan, Kilo Code dapat mengedit file menggunakan Morph Fast Apply. Memerlukan Kilo Code API Provider, OpenRouter atau kunci API Morph.",
+			"name": "Aktifkan Fast Apply",
+			"description": "Ketika diaktifkan, Kilo Code dapat mengedit file menggunakan Fast Apply dengan model khusus yang dioptimalkan untuk modifikasi kode. Memerlukan Kilo Code API Provider, OpenRouter, atau kunci API Morph.",
 			"apiKey": "Kunci API Morph (opsional)",
-			"placeholder": "Masukkan kunci API Morph Anda (opsional)"
+			"placeholder": "Masukkan kunci API Morph kamu (opsional)",
+			"modelLabel": "Pemilihan Model",
+			"modelDescription": "Pilih model Fast Apply mana yang akan digunakan untuk edit file",
+			"models": {
+				"auto": "Otomatis (Default - memilih yang terbaik yang tersedia)",
+				"morphFast": "Morph v3 Fast (Lebih cepat, biaya lebih rendah)",
+				"morphLarge": "Morph v3 Large (Lebih mampu)",
+				"relace": "Relace Apply v3"
+			}
 		},
 		"PREVENT_FOCUS_DISRUPTION": {
 			"name": "Pengeditan Latar Belakang",
@@ -797,7 +815,8 @@
 		},
 		"IMAGE_GENERATION": {
 			"name": "Aktifkan pembuatan gambar AI",
-			"description": "Ketika diaktifkan, Kilo Code dapat menghasilkan gambar dari prompt teks. Memerlukan kunci API Kilo Code atau OpenRouter yang dikonfigurasi (OpenRouter diprioritaskan).",
+			"description": "Ketika diaktifkan, Kilo Code dapat menghasilkan gambar dari prompt teks. Memerlukan kunci API Kilo Code atau OpenRouter yang dikonfigurasi.",
+			"apiProvider": "Penyedia API",
 			"openRouterApiKeyLabel": "Kunci API OpenRouter",
 			"openRouterApiKeyPlaceholder": "Masukkan kunci API OpenRouter Anda",
 			"kiloCodeApiKeyLabel": "Kunci API Kilo Code",
@@ -806,12 +825,16 @@
 			"getApiKeyText": "Dapatkan kunci API Anda dari",
 			"modelSelectionLabel": "Model Pembuatan Gambar",
 			"modelSelectionDescription": "Pilih model untuk pembuatan gambar",
-			"warningMissingKey": "⚠️ Kunci API Kilo Code atau OpenRouter diperlukan untuk pembuatan gambar. Silakan konfigurasi di atas.",
+			"warningMissingKey": "⚠️ Kunci API diperlukan untuk pembuatan gambar, silakan konfigurasi di atas.",
 			"successConfigured": "✓ Pembuatan gambar dikonfigurasi dan siap digunakan"
 		},
 		"INLINE_ASSIST": {
 			"name": "Autocomplete",
 			"description": "Aktifkan fitur Autocomplete untuk saran kode cepat dan perbaikan langsung di editor Anda. Termasuk Tugas Cepat (Cmd+I) untuk perubahan yang ditargetkan dan Autocomplete untuk perbaikan kontekstual."
+		},
+		"RUN_SLASH_COMMAND": {
+			"name": "Aktifkan perintah slash yang dimulai model",
+			"description": "Ketika diaktifkan, Kilo Code dapat menjalankan perintah slash Anda untuk mengeksekusi alur kerja."
 		}
 	},
 	"promptCaching": {
@@ -927,9 +950,36 @@
 			"description": "Tampilkan timeline visual dari pesan-pesan tugas, diwarnai berdasarkan jenisnya, memungkinkan Anda untuk melihat kemajuan tugas dengan cepat dan menggulir kembali ke titik-titik tertentu dalam riwayat tugas."
 		}
 	},
+	"ghost": {
+		"showGutterAnimation": {
+			"label": "Tampilkan animasi gutter saat autocomplete",
+			"description": "Tampilkan indikator animasi di gutter editor saat autocompletion sedang berjalan",
+			"preview": "Pratinjau animasi"
+		}
+	},
 	"includeMaxOutputTokens": "Sertakan token output maksimum",
 	"includeMaxOutputTokensDescription": "Kirim parameter token output maksimum dalam permintaan API. Beberapa provider mungkin tidak mendukung ini.",
 	"limitMaxTokensDescription": "Batasi jumlah maksimum token dalam respons",
 	"maxOutputTokensLabel": "Token output maksimum",
-	"maxTokensGenerateDescription": "Token maksimum untuk dihasilkan dalam respons"
+	"maxTokensGenerateDescription": "Token maksimum untuk dihasilkan dalam respons",
+	"serviceTier": {
+		"label": "Tingkat layanan",
+		"tooltip": "Untuk pemrosesan permintaan API yang lebih cepat, coba tingkat layanan pemrosesan prioritas. Untuk harga lebih rendah dengan latensi lebih tinggi, coba tingkat pemrosesan fleksibel.",
+		"standard": "Standar",
+		"flex": "Fleksibel",
+		"priority": "Prioritas",
+		"pricingTableTitle": "Harga berdasarkan tingkat layanan (harga per 1 juta token)",
+		"columns": {
+			"tier": "Tingkat",
+			"input": "Input",
+			"output": "Output",
+			"cacheReads": "Pembacaan cache"
+		}
+	},
+	"ui": {
+		"collapseThinking": {
+			"label": "Ciutkan pesan Berpikir secara default",
+			"description": "Jika diaktifkan, blok berpikir akan diciutkan secara default sampai Anda berinteraksi dengannya"
+		}
+	}
 }

@@ -28,11 +28,16 @@
 		"notifications": "Meldingen",
 		"contextManagement": "Context",
 		"terminal": "Terminal",
+		"slashCommands": "Slash-opdrachten",
 		"prompts": "Prompts",
+		"ui": "UI",
 		"experimental": "Experimenteel",
 		"language": "Taal",
 		"about": "Over Kilo Code",
 		"display": "Weergeven"
+	},
+	"slashCommands": {
+		"description": "Beheer je slash-commando's om snel aangepaste workflows en acties uit te voeren. <DocsLink>Meer informatie</DocsLink>"
 	},
 	"prompts": {
 		"description": "Configureer ondersteuningsprompts die worden gebruikt voor snelle acties zoals het verbeteren van prompts, het uitleggen van code en het oplossen van problemen. Deze prompts helpen Kilo Code om betere ondersteuning te bieden voor veelvoorkomende ontwikkelingstaken."
@@ -128,9 +133,12 @@
 		"searchMinScoreResetTooltip": "Reset naar standaardwaarde (0.4)",
 		"searchMaxResultsLabel": "Maximum Zoekresultaten",
 		"searchMaxResultsDescription": "Maximum aantal zoekresultaten dat wordt geretourneerd bij het doorzoeken van de codebase-index. Hogere waarden bieden meer context maar kunnen minder relevante resultaten bevatten.",
-		"resetToDefault": "Reset naar standaard"
+		"resetToDefault": "Reset naar standaard",
+		"cancelling": "Bezig met annuleren...",
+		"cancelIndexingButton": "Indexering annuleren"
 	},
 	"autoApprove": {
+		"toggleShortcut": "U kunt een globale sneltoets voor deze instelling configureren <SettingsLink>in de voorkeuren van uw IDE</SettingsLink>.",
 		"description": "Sta Kilo Code toe om automatisch handelingen uit te voeren zonder goedkeuring. Schakel deze instellingen alleen in als je de AI volledig vertrouwt en de bijbehorende beveiligingsrisico's begrijpt.",
 		"enabled": "Auto-goedkeuren ingeschakeld",
 		"toggleAriaLabel": "Automatisch goedkeuren in-/uitschakelen",
@@ -386,9 +394,11 @@
 		"ollama": {
 			"baseUrl": "Basis-URL (optioneel)",
 			"modelId": "Model-ID",
-			"apiKey": "API-sleutel",
+			"apiKey": "Ollama API-sleutel",
 			"apiKeyPlaceholder": "Voer je API-sleutel in",
-			"apiKeyInfo": "API-sleutel wordt verzonden als Authorization-header",
+			"apiKeyHelp": "Optionele API-sleutel voor geauthenticeerde Ollama-instanties of cloudservices. Laat leeg voor lokale installaties.",
+			"numCtx": "Contextvenstergrootte (num_ctx)",
+			"numCtxHelp": "Overschrijft de standaard contextvenstergrootte van het model. Laat leeg om de Modelfile-configuratie van het model te gebruiken. De minimumwaarde is 128.",
 			"description": "Ollama laat je modellen lokaal op je computer draaien. Zie hun quickstart-gids voor instructies.",
 			"warning": "Let op: Kilo Code gebruikt complexe prompts en werkt het beste met Claude-modellen. Minder krachtige modellen werken mogelijk niet zoals verwacht."
 		},
@@ -754,13 +764,21 @@
 		},
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Gelijktijdige bestandsbewerkingen inschakelen",
-			"description": "Wanneer ingeschakeld, kan Kilo Code meerdere bestanden in één verzoek bewerken. Wanneer uitgeschakeld, moet Kilo Code bestanden één voor één bewerken. Het uitschakelen hiervan kan helpen wanneer je werkt met minder capabele modellen of wanneer je meer controle wilt over bestandswijzigingen."
+			"description": "Wanneer ingeschakeld, kan Kilo Code meerdere bestanden in één verzoek bewerken. Wanneer uitgeschakeld, moet Kilo Code bestanden één voor één bewerken. Het uitschakelen hiervan kan helpen wanneer je werkt met minder capabele modellen of wanneer je meer controle wilt over bestandswijzigingen。"
 		},
 		"MORPH_FAST_APPLY": {
-			"name": "Morph Fast Apply inschakelen",
-			"description": "Wanneer ingeschakeld, kan Kilo Code bestanden bewerken met Morph Fast Apply. Vereist de Kilo Code API Provider, OpenRouter of een Morph API-sleutel.",
+			"name": "Fast Apply inschakelen",
+			"description": "Wanneer ingeschakeld, kan Kilo Code bestanden bewerken met Fast Apply met gespecialiseerde modellen geoptimaliseerd voor codewijzigingen. Vereist de Kilo Code API Provider, OpenRouter, of een Morph API-sleutel.",
 			"apiKey": "Morph API-sleutel (optioneel)",
-			"placeholder": "Voer je Morph API-sleutel in (optioneel)"
+			"placeholder": "Voer je Morph API-sleutel in (optioneel)",
+			"modelLabel": "Modelselectie",
+			"modelDescription": "Kies welk Fast Apply-model te gebruiken voor bestandsbewerkingen",
+			"models": {
+				"auto": "Automatisch (Standaard - kiest beste beschikbare)",
+				"morphFast": "Morph v3 Fast (Sneller, lagere kosten)",
+				"morphLarge": "Morph v3 Large (Meer capabel)",
+				"relace": "Relace Apply v3"
+			}
 		},
 		"PREVENT_FOCUS_DISRUPTION": {
 			"name": "Achtergrondbewerking",
@@ -776,7 +794,8 @@
 		},
 		"IMAGE_GENERATION": {
 			"name": "AI-afbeeldingsgeneratie inschakelen",
-			"description": "Wanneer ingeschakeld, kan Kilo Code afbeeldingen genereren van tekstprompts. Vereist een geconfigureerde Kilo Code of OpenRouter API-sleutel (OpenRouter heeft voorrang).",
+			"description": "Wanneer ingeschakeld, kan Kilo Code afbeeldingen genereren van tekstprompts. Vereist een geconfigureerde Kilo Code of OpenRouter API-sleutel.",
+			"apiProvider": "API-provider",
 			"openRouterApiKeyLabel": "OpenRouter API-sleutel",
 			"openRouterApiKeyPlaceholder": "Voer je OpenRouter API-sleutel in",
 			"kiloCodeApiKeyLabel": "Kilo Code API-sleutel",
@@ -785,12 +804,16 @@
 			"getApiKeyText": "Haal je API-sleutel op van",
 			"modelSelectionLabel": "Afbeeldingsgeneratiemodel",
 			"modelSelectionDescription": "Selecteer het model voor afbeeldingsgeneratie",
-			"warningMissingKey": "⚠️ Kilo Code of OpenRouter API-sleutel is vereist voor afbeeldingsgeneratie. Configureer deze hierboven.",
+			"warningMissingKey": "⚠️ Een API-sleutel is vereist voor afbeeldingsgeneratie, configureer deze hierboven.",
 			"successConfigured": "✓ Afbeeldingsgeneratie is geconfigureerd en klaar voor gebruik"
 		},
 		"INLINE_ASSIST": {
 			"name": "Autocomplete",
 			"description": "Schakel Autocomplete-functies in voor snelle codesuggesties en verbeteringen direct in je editor. Bevat Snelle Taak (Cmd+I) voor gerichte wijzigingen en Autocomplete voor contextuele verbeteringen."
+		},
+		"RUN_SLASH_COMMAND": {
+			"name": "Model-geïnitieerde slash-commando's inschakelen",
+			"description": "Wanneer ingeschakeld, kan Kilo Code je slash-commando's uitvoeren om workflows uit te voeren."
 		}
 	},
 	"promptCaching": {
@@ -906,9 +929,36 @@
 			"description": "Toon een visuele tijdlijn van taakmeldingen, gekleurd per type, waardoor je snel de voortgang van taken kunt bekijken en terug kunt scrollen naar specifieke punten in de geschiedenis van de taak."
 		}
 	},
+	"ghost": {
+		"showGutterAnimation": {
+			"label": "Goot animatie tonen bij automatisch aanvullen",
+			"description": "Animatie-indicator tonen in de editor goot wanneer automatisch aanvullen actief is",
+			"preview": "Animatie voorbeeld"
+		}
+	},
 	"includeMaxOutputTokens": "Maximale output tokens opnemen",
 	"includeMaxOutputTokensDescription": "Stuur maximale output tokens parameter in API-verzoeken. Sommige providers ondersteunen dit mogelijk niet.",
 	"limitMaxTokensDescription": "Beperk het maximale aantal tokens in het antwoord",
 	"maxOutputTokensLabel": "Maximale output tokens",
-	"maxTokensGenerateDescription": "Maximale tokens om te genereren in het antwoord"
+	"maxTokensGenerateDescription": "Maximale tokens om te genereren in het antwoord",
+	"serviceTier": {
+		"label": "Serviceniveau",
+		"tooltip": "Voor snellere verwerking van API-verzoeken, probeer het prioriteitsverwerkingsniveau. Voor lagere prijzen met hogere latentie, probeer het flexverwerkingsniveau.",
+		"standard": "Standaard",
+		"flex": "Flex",
+		"priority": "Prioriteit",
+		"pricingTableTitle": "Prijzen per serviceniveau (prijs per 1M tokens)",
+		"columns": {
+			"tier": "Niveau",
+			"input": "Invoer",
+			"output": "Uitvoer",
+			"cacheReads": "Cache leest"
+		}
+	},
+	"ui": {
+		"collapseThinking": {
+			"label": "Denkberichten standaard samenvouwen",
+			"description": "Indien ingeschakeld, worden denkblokken standaard samengevouwen totdat je ermee interageert"
+		}
+	}
 }

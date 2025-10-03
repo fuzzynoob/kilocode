@@ -108,7 +108,7 @@ export const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			togglePinnedApiConfig,
 			localWorkflows, // kilocode_change
 			globalWorkflows, // kilocode_change
-			taskHistory,
+			taskHistoryVersion, // kilocode_change
 			clineMessages,
 		} = useExtensionState()
 
@@ -253,7 +253,7 @@ export const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		// Use custom hook for prompt history navigation
 		const { handleHistoryNavigation, resetHistoryNavigation, resetOnInputChange } = usePromptHistory({
 			clineMessages,
-			taskHistory,
+			taskHistoryVersion, // kilocode_change
 			cwd,
 			inputValue,
 			setInputValue,
@@ -290,6 +290,18 @@ export const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			setImageWarning(null)
 		}, [])
 		// kilocode_change end: Image warning handlers
+
+		// kilocode_change start: Clear images if unsupported
+		// Track previous shouldDisableImages state to detect when model image support changes
+		const prevShouldDisableImages = useRef<boolean>(shouldDisableImages)
+		useEffect(() => {
+			if (!prevShouldDisableImages.current && shouldDisableImages && selectedImages.length > 0) {
+				setSelectedImages([])
+				showImageWarning("kilocode:imageWarnings.imagesRemovedNoSupport")
+			}
+			prevShouldDisableImages.current = shouldDisableImages
+		}, [shouldDisableImages, selectedImages.length, setSelectedImages, showImageWarning])
+		// kilocode_change end: Clear images if unsupported
 
 		const allModes = useMemo(() => getAllModes(customModes), [customModes])
 
@@ -1332,6 +1344,7 @@ export const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						"pr-9",
 						"z-10",
 						"forced-color-adjust-none",
+						"pb-16", // kilocode_change
 					)}
 					style={{
 						color: "transparent",

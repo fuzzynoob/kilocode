@@ -1,8 +1,12 @@
 import {
 	type ModelInfo,
 	type ProviderSettings,
+	type DynamicProvider,
+	type LocalProvider,
 	ANTHROPIC_DEFAULT_MAX_TOKENS,
 	CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS,
+	isDynamicProvider,
+	isLocalProvider,
 } from "@roo-code/types"
 
 // ApiHandlerOptions
@@ -14,131 +18,19 @@ export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider"> & {
 	 * Defaults to true; set to false to disable summaries.
 	 */
 	enableGpt5ReasoningSummary?: boolean
+	/**
+	 * Optional override for Ollama's num_ctx parameter.
+	 * When set, this value will be used in Ollama chat requests.
+	 * When undefined, Ollama will use the model's default num_ctx from the Modelfile.
+	 */
+	ollamaNumCtx?: number
 }
-
-// kilocode_change start
-// Cerebras
-// https://inference-docs.cerebras.ai/api-reference/models
-
-// Cerebras AI Inference Model Definitions - Updated August 2025
-
-export const cerebrasModels = {
-	"gpt-oss-120b": {
-		maxTokens: 65536,
-		contextWindow: 65536,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0.25,
-		outputPrice: 0.69,
-		description: "OpenAI's GPT-OSS model with ~3000 tokens/s",
-	},
-	"llama-4-scout-17b-16e-instruct": {
-		maxTokens: 8192,
-		contextWindow: 8192,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0.65,
-		outputPrice: 0.85,
-		description: "Llama 4 Scout with ~2600 tokens/s",
-	},
-	"llama-4-maverick-17b-128e-instruct": {
-		maxTokens: 8192,
-		contextWindow: 8192,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0.2,
-		outputPrice: 0.6,
-		description: "Llama 4 Maverick with ~1500 tokens/s",
-	},
-	"llama3.1-8b": {
-		maxTokens: 8192,
-		contextWindow: 8192,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0.1,
-		outputPrice: 0.1,
-		description: "Fast and efficient model with ~2200 tokens/s",
-	},
-	"llama-3.3-70b": {
-		maxTokens: 65536,
-		contextWindow: 65536,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0.85,
-		outputPrice: 1.2,
-		description: "Powerful model with ~2100 tokens/s",
-	},
-	"qwen-3-32b": {
-		maxTokens: 65536,
-		contextWindow: 65536,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0.4,
-		outputPrice: 0.8,
-		description: "SOTA coding performance with ~2600 tokens/s",
-	},
-	"qwen-3-235b-a22b-instruct-2507": {
-		maxTokens: 64000,
-		contextWindow: 64000,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0.6,
-		outputPrice: 1.2,
-		description: "Intelligent model with ~1400 tokens/s",
-	},
-	"qwen-3-235b-a22b-thinking-2507": {
-		maxTokens: 65536,
-		contextWindow: 65536,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0.6,
-		outputPrice: 1.2,
-		description: "SOTA performance with ~1700 tokens/s",
-	},
-	"qwen-3-coder-480b": {
-		maxTokens: 65536,
-		contextWindow: 65536,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 2.0,
-		outputPrice: 2.0,
-		description: "SOTA coding model with ~2000 tokens/s",
-	},
-	"deepseek-r1-distill-llama-70b": {
-		maxTokens: 65536,
-		contextWindow: 65536,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 2.2,
-		outputPrice: 2.5,
-		description: "Deepseek R1 Distill with ~2600 tokens/s",
-	},
-} as const satisfies Record<string, ModelInfo>
-
-export type CerebrasModelId = keyof typeof cerebrasModels
-export const cerebrasDefaultModelId: CerebrasModelId = "gpt-oss-120b"
-
-// kilocode_change end
 
 // RouterName
 
-const routerNames = [
-	"openrouter",
-	"requesty",
-	"glama",
-	"unbound",
-	"litellm",
-	"kilocode-openrouter",
-	"ollama",
-	"lmstudio",
-	"io-intelligence",
-	"deepinfra", // kilocode_change
-	"vercel-ai-gateway",
-] as const
+export type RouterName = DynamicProvider | LocalProvider
 
-export type RouterName = (typeof routerNames)[number]
-
-export const isRouterName = (value: string): value is RouterName => routerNames.includes(value as RouterName)
+export const isRouterName = (value: string): value is RouterName => isDynamicProvider(value) || isLocalProvider(value)
 
 export function toRouterName(value?: string): RouterName {
 	if (value && isRouterName(value)) {
@@ -214,9 +106,10 @@ export const getModelMaxOutputTokens = ({
 		(format === "openrouter" && modelId.startsWith("anthropic/"))
 
 	// For "Hybrid" reasoning models, discard the model's actual maxTokens for Anthropic contexts
+	/* kilocode_change: don't limit Anthropic model output, no idea why this was done before
 	if (model.supportsReasoningBudget && isAnthropicContext) {
 		return ANTHROPIC_DEFAULT_MAX_TOKENS
-	}
+	}*/
 
 	// For Anthropic contexts, always ensure a maxTokens value is set
 	if (isAnthropicContext && (!model.maxTokens || model.maxTokens === 0)) {
@@ -249,16 +142,33 @@ export const getModelMaxOutputTokens = ({
 
 // GetModelsOptions
 
-export type GetModelsOptions =
-	| { provider: "openrouter"; apiKey?: string; baseUrl?: string } // kilocode_change: add apiKey, baseUrl
-	| { provider: "glama" }
-	| { provider: "requesty"; apiKey?: string; baseUrl?: string }
-	| { provider: "unbound"; apiKey?: string }
-	| { provider: "litellm"; apiKey: string; baseUrl: string }
-	| { provider: "kilocode-openrouter"; kilocodeToken?: string; kilocodeOrganizationId?: string } // kilocode_change
-	| { provider: "cerebras"; cerebrasApiKey?: string } // kilocode_change
-	| { provider: "ollama"; baseUrl?: string }
-	| { provider: "lmstudio"; baseUrl?: string }
-	| { provider: "deepinfra"; apiKey?: string; baseUrl?: string }
-	| { provider: "io-intelligence"; apiKey: string }
-	| { provider: "vercel-ai-gateway" }
+// Allow callers to always pass apiKey/baseUrl without excess property errors,
+// while still enforcing required fields per provider where applicable.
+type CommonFetchParams = {
+	apiKey?: string
+	baseUrl?: string
+}
+
+// Exhaustive, value-level map for all dynamic providers.
+// If a new dynamic provider is added in packages/types, this will fail to compile
+// until a corresponding entry is added here.
+const dynamicProviderExtras = {
+	openrouter: {} as {}, // eslint-disable-line @typescript-eslint/no-empty-object-type
+	"vercel-ai-gateway": {} as {}, // eslint-disable-line @typescript-eslint/no-empty-object-type
+	huggingface: {} as {}, // eslint-disable-line @typescript-eslint/no-empty-object-type
+	litellm: {} as { apiKey: string; baseUrl: string },
+	"kilocode-openrouter": {} as { kilocodeToken?: string; kilocodeOrganizationId?: string }, // kilocode_change
+	deepinfra: {} as { apiKey?: string; baseUrl?: string },
+	"io-intelligence": {} as { apiKey: string },
+	requesty: {} as { apiKey?: string; baseUrl?: string },
+	unbound: {} as { apiKey?: string },
+	glama: {} as {}, // eslint-disable-line @typescript-eslint/no-empty-object-type
+	ollama: {} as { numCtx?: number }, // kilocode_change
+	lmstudio: {} as {}, // eslint-disable-line @typescript-eslint/no-empty-object-type
+} as const satisfies Record<RouterName, object>
+
+// Build the dynamic options union from the map, intersected with CommonFetchParams
+// so extra fields are always allowed while required ones are enforced.
+export type GetModelsOptions = {
+	[P in keyof typeof dynamicProviderExtras]: ({ provider: P } & (typeof dynamicProviderExtras)[P]) & CommonFetchParams
+}[RouterName]

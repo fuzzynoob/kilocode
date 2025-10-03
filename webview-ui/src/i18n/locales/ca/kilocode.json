@@ -2,8 +2,8 @@
 	"welcome": {
 		"greeting": "Benvingut a Kilo Code!",
 		"introText1": "Kilo Code és un agent de codificació d'IA gratuït i de codi obert.",
-		"introText2": "Funciona amb els models d'IA més recents com Claude 4 Sonnet, Gemini 2.5 Pro, GPT-4.1, i més de 450 més.",
-		"introText3": "Crea un compte gratuït i obtén fins a $25 en tokens per utilitzar en qualsevol model d'IA.",
+		"introText2": "Funciona amb els models d'IA més recents com Claude Sonnet 4.5, Gemini 2.5 Pro, GPT-5, i més de 450 més.",
+		"introText3": "Crea un compte gratuït i obtén $20 en crèdits de bonificació quan recarreguis per primera vegada.",
 		"ctaButton": "Comença",
 		"manualModeButton": "Utilitza la teva pròpia clau API",
 		"alreadySignedUp": "Ja t'has registrat?",
@@ -12,6 +12,11 @@
 	"lowCreditWarning": {
 		"addCredit": "Afegir crèdit",
 		"lowBalance": "El teu saldo de Kilo Code és baix"
+	},
+	"pagination": {
+		"previous": "Anterior",
+		"next": "Següent",
+		"page": "Pàgina {{page}} / {{count}}"
 	},
 	"pricing": {
 		"costUnknown": "cost desconegut",
@@ -37,7 +42,8 @@
 			"logout": "Tancar sessió de Kilo Code",
 			"automaticFetch": "Els models més recents estan disponibles automàticament a Kilo Code. Si no estàs segur de quin model triar, Kilo Code funciona millor amb els models recomanats que apareixen a la part superior en <strong>negreta</strong>.",
 			"providerRouting": {
-				"title": "Kilo Code - Encaminament de proveïdors OpenRouter",
+				"title": "Encaminament de proveïdors",
+				"managedByOrganization": "La configuració d'encaminament de proveïdors està gestionada per la teva organització.",
 				"description": "Kilo Code encamina les sol·licituds als millors proveïdors disponibles per al vostre model. Per defecte, les sol·licituds es distribueixen entre els principals proveïdors per maximitzar el temps de funcionament. No obstant això, podeu triar un proveïdor específic per a aquest model.",
 				"sorting": {
 					"default": "Ordenació de proveïdors per defecte",
@@ -191,7 +197,6 @@
 	"ghost": {
 		"title": "Autocomplete",
 		"settings": {
-			"autoTrigger": "Activació Automàtica",
 			"triggers": "Activadors",
 			"keybindingDescription": "Les funcionalitats d'Autocomplete es poden activar mitjançant ordres. Pots configurar les <DocsLink>Dreceres de Teclat aquí</DocsLink>.",
 			"enableAutoTrigger": {
@@ -203,11 +208,11 @@
 				"description": "El retard en segons abans que Kilo Code activi Autocomplete després que deixis d'escriure. Un retard més curt significa suggeriments més ràpids, però pot ser més intensiu en recursos."
 			},
 			"enableQuickInlineTaskKeybinding": {
-				"label": "Tasca Ràpida",
+				"label": "Tasca ràpida ({{keybinding}})",
 				"description": "Només necessites un canvi ràpid? Selecciona codi (o no!) i prem Cmd+I. Descriu el teu objectiu en català simple (\"crear un component React amb aquestes props\", \"afegir gestió d'errors a aquesta funció\"), i obtén múltiples suggeriments llestos per usar directament al teu editor. <DocsLink>Veure drecera</DocsLink>"
 			},
 			"enableSmartInlineTaskKeybinding": {
-				"label": "Autocomplete Manual",
+				"label": "Autocompleció Manual ({{keybinding}})",
 				"description": "Necessites una correcció ràpida, completació o refactorització? Kilo utilitzarà el context circumdant per oferir millores immediates, mantenint-te en el flux. <DocsLink>Veure drecera</DocsLink>"
 			},
 			"enableCustomProvider": {
@@ -219,7 +224,8 @@
 				"label": "Configuració d'API",
 				"current": "Usar configuració d'API actualment seleccionada",
 				"description": "Selecciona una configuració d'API per usar als prompts d'Autocomplete, o simplement usa la que està actualment seleccionada"
-			}
+			},
+			"keybindingNotFound": "no trobat"
 		}
 	},
 	"virtualProvider": {
@@ -246,6 +252,14 @@
 	},
 	"imageWarnings": {
 		"modelNoImageSupport": "Les imatges no són compatibles amb el model actual.",
-		"maxImagesReached": "Màxim de 20 imatges per missatge. Elimineu algunes imatges per afegir-ne més."
+		"maxImagesReached": "Màxim de 20 imatges per missatge. Elimineu algunes imatges per afegir-ne més.",
+		"imagesRemovedNoSupport": "Imatges eliminades, no compatibles amb el model."
+	},
+	"invalidModel": {
+		"alphaPeriodEnded": "🎉 El període alfa per a {{model}} ha finalitzat! Canvia a un model diferent per continuar.",
+		"notAllowedForTeam": "⚠️ La teva organització no permet l'ús del model {{model}}. Canvia a un model diferent per continuar.",
+		"modelUnavailable": "⚠️ El model {{model}} no està disponible. Canvia a un model diferent per continuar.",
+		"continueWith": "Continua amb {{model}}",
+		"continue": "Continua"
 	}
 }

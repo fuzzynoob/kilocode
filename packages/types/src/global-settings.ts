@@ -14,7 +14,7 @@ import { telemetrySettingsSchema } from "./telemetry.js"
 import { modeConfigSchema } from "./mode.js"
 import { customModePromptsSchema, customSupportPromptsSchema } from "./mode.js"
 import { languagesSchema } from "./vscode.js"
-import { ghostServiceSettingsSchema } from "./kilocode.js" // kilocode_change
+import { fastApplyModelSchema, ghostServiceSettingsSchema } from "./kilocode.js" // kilocode_change
 
 /**
  * Default delay in milliseconds after writes to allow diagnostics to detect potential problems.
@@ -42,6 +42,7 @@ export const globalSettingsSchema = z.object({
 	lastShownAnnouncementId: z.string().optional(),
 	customInstructions: z.string().optional(),
 	taskHistory: z.array(historyItemSchema).optional(),
+	dismissedUpsells: z.array(z.string()).optional(),
 
 	// Image generation settings (experimental) - flattened for simplicity
 	openRouterImageApiKey: z.string().optional(),
@@ -138,7 +139,10 @@ export const globalSettingsSchema = z.object({
 	fuzzyMatchThreshold: z.number().optional(),
 	experiments: experimentsSchema.optional(),
 
-	morphApiKey: z.string().optional(), // kilocode_change: Morph fast apply
+	// kilocode_change start: Morph fast apply
+	morphApiKey: z.string().optional(),
+	fastApplyModel: fastApplyModelSchema.optional(),
+	// kilocode_change end
 
 	codebaseIndexModels: codebaseIndexModelsSchema.optional(),
 	codebaseIndexConfig: codebaseIndexConfigSchema.optional(),
@@ -150,8 +154,6 @@ export const globalSettingsSchema = z.object({
 	mcpEnabled: z.boolean().optional(),
 	enableMcpServerCreation: z.boolean().optional(),
 	mcpMarketplaceCatalog: z.any().optional(), // kilocode_change: MCP marketplace catalog
-
-	remoteControlEnabled: z.boolean().optional(),
 
 	mode: z.string().optional(),
 	modeApiConfigs: z.record(z.string(), z.string()).optional(),
@@ -165,6 +167,7 @@ export const globalSettingsSchema = z.object({
 	ghostServiceSettings: ghostServiceSettingsSchema, // kilocode_change
 	includeTaskHistoryInEnhance: z.boolean().optional(),
 	historyPreviewCollapsed: z.boolean().optional(),
+	reasoningBlockCollapsed: z.boolean().optional(),
 	profileThresholds: z.record(z.string(), z.number()).optional(),
 	hasOpenedModeSelector: z.boolean().optional(),
 	lastModeExportPath: z.string().optional(),
@@ -210,11 +213,11 @@ export const SECRET_STATE_KEYS = [
 	"groqApiKey",
 	"chutesApiKey",
 	"litellmApiKey",
+	"deepInfraApiKey",
 	"codeIndexOpenAiKey",
 	"codeIndexQdrantApiKey",
 	// kilocode_change start
 	"kilocodeToken",
-	"deepInfraApiKey",
 	// kilocode_change end
 	"codebaseIndexOpenAiCompatibleApiKey",
 	"codebaseIndexGeminiApiKey",
@@ -340,8 +343,6 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	telemetrySetting: "enabled",
 
 	mcpEnabled: false,
-
-	remoteControlEnabled: false,
 
 	mode: "code", // "architect",
 

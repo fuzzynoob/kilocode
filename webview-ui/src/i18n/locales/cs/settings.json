@@ -29,10 +29,21 @@
 		"notifications": "Oznámení",
 		"contextManagement": "Kontext",
 		"terminal": "Terminál",
-		"prompts": "Výzvy",
+		"slashCommands": "Slash příkazy",
+		"prompts": "Podpůrné výzvy",
+		"ui": "Uživatelské rozhraní",
 		"experimental": "Experimentální",
 		"language": "Jazyk",
 		"about": "O Kilo Code"
+	},
+	"slashCommands": {
+		"description": "Spravujte své slash příkazy pro rychlé spouštění vlastních pracovních postupů a akcí. <DocsLink>Více informací</DocsLink>"
+	},
+	"ui": {
+		"collapseThinking": {
+			"label": "Sbalit zprávy Přemýšlení ve výchozím nastavení",
+			"description": "Když je povoleno, bloky přemýšlení budou ve výchozím nastavení sbalené, dokud s nimi neinteragujete"
+		}
 	},
 	"prompts": {
 		"description": "Nakonfigurujte podpůrné výzvy, které se používají pro rychlé akce, jako je vylepšení výzev, vysvětlení kódu a oprava problémů. Tyto výzvy pomáhají Kilo Code poskytovat lepší pomoc při běžných vývojových úkolech."
@@ -128,7 +139,9 @@
 			"ollamaBaseUrlRequired": "Základní URL Ollama je povinné",
 			"baseUrlRequired": "Základní URL je povinné",
 			"modelDimensionMinValue": "Dimenze modelu musí být větší než 0"
-		}
+		},
+		"cancelling": "Probíhá rušení...",
+		"cancelIndexingButton": "Zrušit indexování"
 	},
 	"autoApproval": {
 		"title": "Automatické schválení",
@@ -136,6 +149,7 @@
 	},
 	"autoApprove": {
 		"description": "Povolit Kilo Code automaticky provádět operace bez nutnosti schválení. Povolte tato nastavení pouze v případě, že plně důvěřujete AI a rozumíte souvisejícím bezpečnostním rizikům.",
+		"toggleShortcut": "Můžete nakonfigurovat klávesovou zkratku pro toto nastavení <SettingsLink>v nastaveních vašeho IDE</SettingsLink>.",
 		"enabled": "Automatické schválení povoleno",
 		"readOnly": {
 			"label": "Číst",
@@ -404,6 +418,9 @@
 			"apiKey": "Klíč API",
 			"apiKeyPlaceholder": "Zadejte svůj klíč API",
 			"apiKeyInfo": "Klíč API bude odeslán jako Authorization hlavička",
+			"apiKeyHelp": "Volitelný klíč API pro autentizované instance Ollama nebo cloudové služby. Ponechte prázdné pro místní instalace.",
+			"numCtx": "Velikost kontextového okna (num_ctx)",
+			"numCtxHelp": "Přepsat výchozí velikost kontextového okna modelu. Ponechte prázdné pro použití konfigurace Modelfile modelu. Minimální hodnota je 128.",
 			"description": "Ollama vám umožňuje spouštět modely lokálně na vašem počítači. Pokyny k zahájení práce naleznete v jejich průvodci rychlým startem.",
 			"warning": "Poznámka: Kilo Code používá složité výzvy a nejlépe funguje s modely Claude. Méně schopné modely nemusí fungovat podle očekávání."
 		},
@@ -587,6 +604,13 @@
 			"description": "Zobrazit vizuální časovou osu zpráv úkolu, barevně odlišenou podle typu, což vám umožní rychle zobrazit průběh úkolu a posunout se zpět na konkrétní body v historii úkolu."
 		}
 	},
+	"ghost": {
+		"showGutterAnimation": {
+			"label": "Zobrazit animaci v okraji při automatickém dokončování",
+			"description": "Zobrazit animovaný indikátor v okraji editoru, když běží automatické dokončování",
+			"preview": "Náhled animace"
+		}
+	},
 	"notifications": {
 		"sound": {
 			"label": "Povolit zvukové efekty",
@@ -702,7 +726,7 @@
 		},
 		"shellIntegrationDisabled": {
 			"label": "Zakázat integraci shellu terminálu",
-			"description": "Povolte tuto možnost, pokud příkazy terminálu nefungují správně nebo se zobrazují chyby „Integrace shellu není k dispozici“. Tímto se použije jednodušší metoda spouštění příkazů, která obejde některé pokročilé funkce terminálu. <0>Dozvědět se více</0>"
+			"description": "Povolte tuto možnost, pokud příkazy terminálu nefungují správně nebo se zobrazují chyby „Integrace shellu není k dispozici“. Tím k se použije jednodušší metoda spouštění příkazů, která obejde některé pokročilé funkce terminálu. <0>Dozvědět se více</0>"
 		},
 		"commandDelay": {
 			"label": "Zpoždění příkazu terminálu",
@@ -764,7 +788,7 @@
 				},
 				"descriptions": {
 					"standard": "Standardní strategie diff aplikuje změny na jeden blok kódu najednou.",
-					"unified": "Sjednocená strategie diff používá více přístupů k aplikaci diffů a vybírá ten nejlepší.",
+					"unified": "Sjednocená strategie diff používá více přístupů k aplikace diffů a vybírá ten nejlepší.",
 					"multiBlock": "Strategie diff s více bloky umožňuje aktualizovat více bloků kódu v souboru v jednom požadavku."
 				}
 			},
@@ -782,6 +806,20 @@
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Použít experimentální sjednocenou strategii diff",
 			"description": "Povolit experimentální sjednocenou strategii diff. Tato strategie může snížit počet opakování způsobených chybami modelu, ale může způsobit neočekávané chování nebo nesprávné úpravy. Povolte pouze pokud rozumíte rizikům a jste ochotni pečlivě zkontrolovat všechny změny."
+		},
+		"MORPH_FAST_APPLY": {
+			"name": "Povolit rychlé aplikování",
+			"description": "Pokud je povoleno, Kilo Code může upravovat soubory pomocí rychlého aplikování se specializovanými modely optimalizovanými pro úpravy kódu. Vyžaduje poskytovatele Kilo Code API, OpenRouter nebo klíč API Morph.",
+			"apiKey": "Klíč API Morph (volitelné)",
+			"placeholder": "Zadejte svůj klíč API Morph (volitelné)",
+			"modelLabel": "Výběr modelu",
+			"modelDescription": "Vyberte, který model rychlého aplikování použít pro úpravy souborů",
+			"models": {
+				"auto": "Automaticky (výchozí - vybere nejlepší dostupný)",
+				"morphFast": "Morph v3 Fast (rychlejší, nižší náklady)",
+				"morphLarge": "Morph v3 Large (schopnější)",
+				"relace": "Relace Apply v3"
+			}
 		},
 		"SEARCH_AND_REPLACE": {
 			"name": "Použít experimentální nástroj hledání a nahrazování",
@@ -811,12 +849,6 @@
 			"name": "Povolit souběžné úpravy souborů",
 			"description": "Pokud je povoleno, Kilo Code může upravovat více souborů v jednom požadavku. Pokud je zakázáno, Kilo Code musí upravovat soubory jeden po druhém. Zakázání může pomoci při práci s méně schopnými modely nebo když chcete mít větší kontrolu nad úpravami souborů."
 		},
-		"MORPH_FAST_APPLY": {
-			"name": "Povolit Morph Fast Apply",
-			"description": "Pokud je povoleno, Kilo Code může upravovat soubory pomocí Morph Fast Apply. Vyžaduje poskytovatele Kilo Code API, OpenRouter nebo klíč API Morph.",
-			"apiKey": "Klíč API Morph (volitelné)",
-			"placeholder": "Zadejte svůj klíč API Morph (volitelné)"
-		},
 		"PREVENT_FOCUS_DISRUPTION": {
 			"name": "Úpravy na pozadí",
 			"description": "Zabránit narušení zaměření editoru, když je povoleno. Úpravy souborů probíhají na pozadí bez otevírání diff zobrazení nebo krádeže zaměření. Můžete pokračovat v práci bez přerušení, zatímco Kilo Code provádí změny. Soubory mohou být otevřeny bez zaměření pro zachycení diagnostiky nebo zůstat zcela zavřené."
@@ -831,7 +863,8 @@
 		},
 		"IMAGE_GENERATION": {
 			"name": "Povolit AI generování obrázků",
-			"description": "Když je povoleno, Kilo Code může generovat obrázky z textových podnětů. Vyžaduje Kilo Code nebo OpenRouter API klíč (OpenRouter má přednost).",
+			"description": "Když je povoleno, Kilo Code může generovat obrázky z textových podnětů. Vyžaduje Kilo Code nebo OpenRouter API klíč.",
+			"apiProvider": "Poskytovatel API",
 			"openRouterApiKeyLabel": "OpenRouter API Key",
 			"openRouterApiKeyPlaceholder": "Zadejte svůj OpenRouter API klíč",
 			"kiloCodeApiKeyLabel": "Kilo Code API klíč",
@@ -840,8 +873,12 @@
 			"getApiKeyText": "Získejte API klíč z",
 			"modelSelectionLabel": "Model pro generování obrázků",
 			"modelSelectionDescription": "Vyberte model pro použití při generování obrázků",
-			"warningMissingKey": "⚠️ Kilo Code nebo OpenRouter API klíč je vyžadován pro generování obrázků. Nakonfigurujte ho výše.",
+			"warningMissingKey": "⚠️ API klíč je vyžadován pro generování obrázků, nakonfigurujte ho výše.",
 			"successConfigured": "✓ Generování obrázků je nakonfigurováno a připraveno k použití"
+		},
+		"RUN_SLASH_COMMAND": {
+			"name": "Povolit slash příkazy iniciované modelem",
+			"description": "Když je povoleno, Kilo Code může spouštět vaše slash příkazy k provedení pracovních toků."
 		},
 		"INLINE_ASSIST": {
 			"name": "Autocomplete",
@@ -959,5 +996,19 @@
 	"maxOutputTokensLabel": "Maximální počet výstupních tokenů",
 	"maxTokensGenerateDescription": "Maximální počet tokenů k vygenerování v odpovědi",
 	"includeMaxOutputTokens": "Zahrnout maximální počet výstupních tokenů",
-	"includeMaxOutputTokensDescription": "Odeslat parametr maximálního počtu výstupních tokenů v požadavcích API. Někteří poskytovatelé to nemusí podporovat."
+	"includeMaxOutputTokensDescription": "Odeslat parametr maximálního počtu výstupních tokenů v požadavcích API. Někteří poskytovatelé to nemusí podporovat.",
+	"serviceTier": {
+		"label": "Úroveň služby",
+		"tooltip": "Pro rychlejší zpracování API požadavků zkuste úroveň prioritního zpracování. Pro nižší ceny s vyšší latencí zkuste flexibilní úroveň zpracování.",
+		"standard": "Standardní",
+		"flex": "Flexibilní",
+		"priority": "Prioritní",
+		"pricingTableTitle": "Ceny podle úrovně služby (cena za 1M tokenů)",
+		"columns": {
+			"tier": "Úroveň",
+			"input": "Vstup",
+			"output": "Výstup",
+			"cacheReads": "Čtení cache"
+		}
+	}
 }

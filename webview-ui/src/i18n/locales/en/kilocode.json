@@ -2,8 +2,8 @@
 	"welcome": {
 		"greeting": "Welcome to Kilo Code!",
 		"introText1": "Kilo Code is a free, open source AI coding agent.",
-		"introText2": "It works with the latest AI models like Claude 4 Sonnet, Gemini 2.5 Pro, GPT-4.1, and 450+ more.",
-		"introText3": "Create a free account and get up to $25 worth of tokens to use across any AI model.",
+		"introText2": "It works with the latest AI models like Claude Sonnet 4.5, Gemini 2.5 Pro, GPT-5, and 450+ more.",
+		"introText3": "Create a free account and get $20 in bonus credits when you top-up for the first time.",
 		"ctaButton": "Get Started",
 		"manualModeButton": "Use your own API key",
 		"alreadySignedUp": "Already signed up?",
@@ -12,6 +12,18 @@
 	"lowCreditWarning": {
 		"addCredit": "Add Credit",
 		"lowBalance": "Your Kilo Code balance is low"
+	},
+	"pagination": {
+		"previous": "Previous",
+		"next": "Next",
+		"page": "Page {{page}} / {{count}}"
+	},
+	"invalidModel": {
+		"alphaPeriodEnded": "🎉 The alpha period for {{model}} has ended! Change to a different model to continue.",
+		"notAllowedForTeam": "⚠️ Your organization does not allow use of the {{model}} model. Change to a different model to continue.",
+		"modelUnavailable": "⚠️ The model {{model}} is unavailable. Change to a different model to continue.",
+		"continueWith": "Continue with {{model}}",
+		"continue": "Continue"
 	},
 	"pricing": {
 		"costUnknown": "cost unknown",
@@ -28,7 +40,8 @@
 	},
 	"imageWarnings": {
 		"modelNoImageSupport": "Images are not supported by the current model.",
-		"maxImagesReached": "Maximum of 20 images per message. Remove some images to add more."
+		"maxImagesReached": "Maximum of 20 images per message. Remove some images to add more.",
+		"imagesRemovedNoSupport": "Images removed, unsupported by model."
 	},
 	"settings": {
 		"sections": {
@@ -40,8 +53,8 @@
 			"login": "Log in at Kilo Code",
 			"logout": "Log out from Kilo Code",
 			"providerRouting": {
-				"title": "Kilo Code - OpenRouter Provider Routing",
-				"description": "Kilo Code routes requests to the best available providers for your model. By default, requests are load balanced across the top providers to maximize uptime. However, you can choose a specific provider to use for this model.",
+				"title": "Provider Routing",
+				"managedByOrganization": "The Provider Routing settings are managed by your organization.",
 				"sorting": {
 					"default": "Default provider sorting",
 					"price": "Prefer providers with lower price",
@@ -195,24 +208,22 @@
 	"ghost": {
 		"title": "Autocomplete",
 		"settings": {
-			"autoTrigger": "Auto Trigger",
 			"triggers": "Triggers",
-			"keybindingDescription": "Autocomplete features can be triggered by commands. You can configure the <DocsLink>Keyboard Shortcuts here</DocsLink>.",
 			"enableAutoTrigger": {
-				"label": "Enable Autocomplete",
-				"description": "When enabled, Kilo Code will automatically trigger Autocomplete when you stop typing. This can be useful for quick fixes and suggestions."
+				"label": "Pause to Complete",
+				"description": "When enabled, Kilo Code will automatically trigger Autocomplete when you pause typing. This can be useful for quick fixes and suggestions."
 			},
 			"autoTriggerDelay": {
 				"label": "Auto Trigger Delay",
-				"description": "The delay in seconds before Kilo Code triggers Autocomplete after you stop typing. A shorter delay means quicker suggestions, but may be more resource-intensive."
+				"description": "The delay in seconds before Kilo Code triggers Autocomplete after you pause typing. A shorter delay means quicker suggestions, but may be more resource-intensive."
 			},
 			"enableQuickInlineTaskKeybinding": {
-				"label": "Quick Task",
-				"description": "Only need a quick change? Select some code (or don't!) and hit Cmd+I. Describe your goal in plain English (\"create a React component with these props\", \"add error handling to this function\"), and get multiple, ready-to-use suggestions right in your editor. <DocsLink>See shortcut</DocsLink>"
+				"label": "Quick Task ({{keybinding}})",
+				"description": "Only need a quick change? Select some code (or don't!) and hit Cmd+I. Describe your goal in plain English (\"create a React component with these props\", \"add error handling to this function\"), and get multiple, ready-to-use suggestions right in your editor. <DocsLink>Edit shortcut</DocsLink>"
 			},
 			"enableSmartInlineTaskKeybinding": {
-				"label": "Manual Autocomplete",
-				"description": "Need a quick fix, completion, or refactor? Kilo will use the surrounding context to offer immediate improvements, keeping you in the flow. <DocsLink>See shortcut</DocsLink>"
+				"label": "Manual Autocomplete ({{keybinding}})",
+				"description": "Need a quick fix, completion, or refactor? Kilo will use the surrounding context to offer immediate improvements, keeping you in the flow. <DocsLink>Edit shortcut</DocsLink>"
 			},
 			"enableCustomProvider": {
 				"label": "Use custom provider",
@@ -223,7 +234,8 @@
 				"label": "API Configuration",
 				"current": "Use currently selected API configuration",
 				"description": "Select an API configuration to use for Autocomplete prompts, or just use whatever is currently selected"
-			}
+			},
+			"keybindingNotFound": "not found"
 		}
 	},
 	"virtualProvider": {

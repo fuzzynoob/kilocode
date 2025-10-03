@@ -25,7 +25,8 @@ export enum TelemetryEventName {
 	INLINE_ASSIST_ACCEPT_SUGGESTION = "Inline Assist Accept Suggestion",
 	INLINE_ASSIST_REJECT_SUGGESTION = "Inline Assist Reject Suggestion",
 	CHECKPOINT_FAILURE = "Checkpoint Failure",
-	EXCESSIVE_RECURSION = "Excessive Recursion",
+	TOOL_ERROR = "Tool Error",
+	MAX_COMPLETION_TOKENS_REACHED_ERROR = "Max Completion Tokens Reached Error",
 	NOTIFICATION_CLICKED = "Notification Clicked",
 	WEBVIEW_MEMORY_USAGE = "Webview Memory Usage",
 	FREE_MODELS_LINK_CLICKED = "Free Models Link Clicked",
@@ -77,11 +78,17 @@ export enum TelemetryEventName {
 	ACCOUNT_LOGOUT_CLICKED = "Account Logout Clicked",
 	ACCOUNT_LOGOUT_SUCCESS = "Account Logout Success",
 
+	FEATURED_PROVIDER_CLICKED = "Featured Provider Clicked",
+
+	UPSELL_DISMISSED = "Upsell Dismissed",
+	UPSELL_CLICKED = "Upsell Clicked",
+
 	SCHEMA_VALIDATION_ERROR = "Schema Validation Error",
 	DIFF_APPLICATION_ERROR = "Diff Application Error",
 	SHELL_INTEGRATION_ERROR = "Shell Integration Error",
 	CONSECUTIVE_MISTAKE_ERROR = "Consecutive Mistake Error",
 	CODE_INDEX_ERROR = "Code Index Error",
+	TELEMETRY_SETTINGS_CHANGED = "Telemetry Settings Changed",
 }
 
 /**
@@ -94,6 +101,12 @@ export const staticAppPropertiesSchema = z.object({
 	vscodeVersion: z.string(),
 	platform: z.string(),
 	editorName: z.string(),
+	wrapped: z.boolean(), // kilocode_change
+	wrapper: z.string().nullable(), // kilocode_change
+	wrapperTitle: z.string().nullable(), // kilocode_change
+	wrapperCode: z.string().nullable(), // kilocode_change
+	wrapperVersion: z.string().nullable(), // kilocode_change
+	hostname: z.string().optional(),
 })
 
 export type StaticAppProperties = z.infer<typeof staticAppPropertiesSchema>
@@ -133,6 +146,10 @@ export const taskPropertiesSchema = z.object({
 			pending: z.number(),
 		})
 		.optional(),
+	// kilocode_change start
+	currentTaskSize: z.number().optional(),
+	taskHistorySize: z.number().optional(),
+	// kilocode_change end
 })
 
 export type TaskProperties = z.infer<typeof taskPropertiesSchema>
@@ -205,6 +222,9 @@ export const rooCodeTelemetryEventSchema = z.discriminatedUnion("type", [
 			TelemetryEventName.ACCOUNT_CONNECT_SUCCESS,
 			TelemetryEventName.ACCOUNT_LOGOUT_CLICKED,
 			TelemetryEventName.ACCOUNT_LOGOUT_SUCCESS,
+			TelemetryEventName.FEATURED_PROVIDER_CLICKED,
+			TelemetryEventName.UPSELL_DISMISSED,
+			TelemetryEventName.UPSELL_CLICKED,
 			TelemetryEventName.SCHEMA_VALIDATION_ERROR,
 			TelemetryEventName.DIFF_APPLICATION_ERROR,
 			TelemetryEventName.SHELL_INTEGRATION_ERROR,
@@ -217,6 +237,14 @@ export const rooCodeTelemetryEventSchema = z.discriminatedUnion("type", [
 			TelemetryEventName.CUSTOM_MODE_CREATED,
 		]),
 		properties: telemetryPropertiesSchema,
+	}),
+	z.object({
+		type: z.literal(TelemetryEventName.TELEMETRY_SETTINGS_CHANGED),
+		properties: z.object({
+			...telemetryPropertiesSchema.shape,
+			previousSetting: telemetrySettingsSchema,
+			newSetting: telemetrySettingsSchema,
+		}),
 	}),
 	z.object({
 		type: z.literal(TelemetryEventName.TASK_MESSAGE),
@@ -266,11 +294,11 @@ export interface TelemetryClient {
 
 	setProvider(provider: TelemetryPropertiesProvider): void
 	capture(options: TelemetryEvent): Promise<void>
-	updateTelemetryState(didUserOptIn: boolean): void
 	// kilocode_change start
 	captureException(error: Error, properties?: Record<string | number, unknown>): void
 	updateIdentity(kilocodeToken: string): Promise<void>
 	// kilocode_change end
+	updateTelemetryState(isOptedIn: boolean): void
 	isTelemetryEnabled(): boolean
 	shutdown(): Promise<void>
 }

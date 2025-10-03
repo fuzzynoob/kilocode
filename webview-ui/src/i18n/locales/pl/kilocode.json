@@ -2,8 +2,8 @@
 	"welcome": {
 		"greeting": "Witaj w Kilo Code!",
 		"introText1": "Kilo Code to darmowy, otwartoźródłowy agent kodowania AI.",
-		"introText2": "Współpracuje z najnowszymi modelami AI, takimi jak Claude 4 Sonnet, Gemini 2.5 Pro, GPT-4.1 i ponad 450 innymi.",
-		"introText3": "Stwórz darmowe konto i otrzymaj do $25 wartości tokenów do wykorzystania z dowolnym modelem AI.",
+		"introText2": "Współpracuje z najnowszymi modelami AI, takimi jak Claude Sonnet 4.5, Gemini 2.5 Pro, GPT-5 i ponad 450 innymi.",
+		"introText3": "Stwórz darmowe konto i otrzymaj $20 bonusowych kredytów przy pierwszym doładowaniu.",
 		"ctaButton": "Rozpocznij",
 		"manualModeButton": "Użyj własnego klucza API",
 		"alreadySignedUp": "Już zarejestrowany?",
@@ -12,6 +12,11 @@
 	"lowCreditWarning": {
 		"addCredit": "Dodaj kredyt",
 		"lowBalance": "Twój stan konta Kilo Code jest niski"
+	},
+	"pagination": {
+		"previous": "Poprzednia",
+		"next": "Następna",
+		"page": "Strona {{page}} / {{count}}"
 	},
 	"pricing": {
 		"costUnknown": "koszt nieznany",
@@ -36,7 +41,8 @@
 			"login": "Zaloguj się do Kilo Code",
 			"logout": "Wyloguj się z Kilo Code",
 			"providerRouting": {
-				"title": "Kilo Code - Routing dostawców OpenRouter",
+				"title": "Routing dostawców",
+				"managedByOrganization": "Ustawienia routingu dostawców są zarządzane przez Twoją organizację.",
 				"description": "Kilo Code kieruje żądania do najlepszych dostępnych dostawców dla Twojego modelu. Domyślnie żądania są równoważone obciążeniem między najlepszymi dostawcami, aby zmaksymalizować czas działania. Możesz jednak wybrać konkretnego dostawcę do użycia dla tego modelu.",
 				"sorting": {
 					"default": "Domyślne sortowanie dostawców",
@@ -191,7 +197,6 @@
 	"ghost": {
 		"title": "Autocomplete",
 		"settings": {
-			"autoTrigger": "Automatyczne Wyzwalanie",
 			"triggers": "Wyzwalacze",
 			"keybindingDescription": "Funkcje Autocomplete mogą być wyzwalane przez polecenia. Możesz skonfigurować <DocsLink>Skróty Klawiszowe tutaj</DocsLink>.",
 			"enableAutoTrigger": {
@@ -203,11 +208,11 @@
 				"description": "Opóźnienie w sekundach przed tym, jak Kilo Code wyzwoli Autocomplete po tym, jak przestaniesz pisać. Krótsze opóźnienie oznacza szybsze sugestie, ale może być bardziej zasobożerne."
 			},
 			"enableQuickInlineTaskKeybinding": {
-				"label": "Szybkie Zadanie",
+				"label": "Szybkie zadanie ({{keybinding}})",
 				"description": "Potrzebujesz tylko szybkiej zmiany? Zaznacz trochę kodu (lub nie!) i naciśnij Cmd+I. Opisz swój cel w prostym języku polskim (\"stwórz komponent React z tymi propsami\", \"dodaj obsługę błędów do tej funkcji\"), i otrzymaj wiele gotowych do użycia sugestii bezpośrednio w swoim edytorze. <DocsLink>Zobacz skrót</DocsLink>"
 			},
 			"enableSmartInlineTaskKeybinding": {
-				"label": "Ręczne Autocomplete",
+				"label": "Ręczne uzupełnianie ({{keybinding}})",
 				"description": "Potrzebujesz szybkiej poprawki, uzupełnienia lub refaktoryzacji? Kilo użyje otaczającego kontekstu, aby zaoferować natychmiastowe ulepszenia, utrzymując cię w przepływie. <DocsLink>Zobacz skrót</DocsLink>"
 			},
 			"enableCustomProvider": {
@@ -219,7 +224,8 @@
 				"label": "Konfiguracja API",
 				"current": "Użyj aktualnie wybranej konfiguracji API",
 				"description": "Wybierz konfigurację API do użycia dla promptów Autocomplete, lub po prostu użyj tej, która jest aktualnie wybrana"
-			}
+			},
+			"keybindingNotFound": "nie znaleziono"
 		}
 	},
 	"virtualProvider": {
@@ -246,6 +252,14 @@
 	},
 	"imageWarnings": {
 		"modelNoImageSupport": "Obrazy nie są obsługiwane przez aktualny model.",
-		"maxImagesReached": "Maksymalnie 20 obrazów na wiadomość. Usuń niektóre obrazy, aby dodać więcej."
+		"maxImagesReached": "Maksymalnie 20 obrazów na wiadomość. Usuń niektóre obrazy, aby dodać więcej.",
+		"imagesRemovedNoSupport": "Obrazy usunięte, nieobsługiwane przez model."
+	},
+	"invalidModel": {
+		"alphaPeriodEnded": "🎉 Okres alfa dla {{model}} się zakończył! Zmień na inny model, aby kontynuować.",
+		"notAllowedForTeam": "⚠️ Twoja organizacja nie zezwala na używanie modelu {{model}}. Zmień na inny model, aby kontynuować.",
+		"modelUnavailable": "⚠️ Model {{model}} jest niedostępny. Zmień na inny model, aby kontynuować.",
+		"continueWith": "Kontynuuj z {{model}}",
+		"continue": "Kontynuuj"
 	}
 }

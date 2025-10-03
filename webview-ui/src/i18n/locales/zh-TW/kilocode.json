@@ -2,8 +2,8 @@
 	"welcome": {
 		"greeting": "歡迎使用 Kilo Code！",
 		"introText1": "Kilo Code 是一個免費的開源 AI 程式設計代理。",
-		"introText2": "它適用於最新的 AI 模型，如 Claude 4 Sonnet、Gemini 2.5 Pro、GPT-4.1 以及 450 多個其他模型。",
-		"introText3": "建立免費帳戶，獲得最多價值 25 美元的 token，可用於任何 AI 模型。",
+		"introText2": "它適用於最新的 AI 模型，如 Claude Sonnet 4.5、Gemini 2.5 Pro、GPT-5 以及 450 多個其他模型。",
+		"introText3": "建立免費帳戶，首次儲值即可獲得 20 美元獎勵額度。",
 		"ctaButton": "開始使用",
 		"manualModeButton": "使用你自己的 API 金鑰",
 		"alreadySignedUp": "已經註冊了？",
@@ -12,6 +12,13 @@
 	"lowCreditWarning": {
 		"addCredit": "添加額度",
 		"lowBalance": "你的 Kilo Code 餘額不足"
+	},
+	"invalidModel": {
+		"alphaPeriodEnded": "🎉 {{model}} 的測試期已結束！請切換到其他模型繼續使用。",
+		"notAllowedForTeam": "⚠️ 您的組織不允許使用 {{model}} 模型。請切換到其他模型繼續使用。",
+		"modelUnavailable": "⚠️ 模型 {{model}} 無法使用。請切換到其他模型繼續使用。",
+		"continueWith": "繼續使用 {{model}}",
+		"continue": "繼續"
 	},
 	"pricing": {
 		"costUnknown": "費用未知",
@@ -49,7 +56,8 @@
 			"login": "登入 Kilo Code",
 			"logout": "登出 Kilo Code",
 			"providerRouting": {
-				"title": "Kilo Code - OpenRouter 供應商路由",
+				"title": "供應商路由",
+				"managedByOrganization": "供應商路由設定由您的組織管理。",
 				"description": "Kilo Code 將請求路由到您模型的最佳可用供應商。預設情況下，請求會在頂級供應商之間進行負載平衡，以最大化正常執行時間。但是，您可以選擇要用於此模型的特定供應商。",
 				"sorting": {
 					"default": "預設供應商排序",
@@ -191,7 +199,6 @@
 	"ghost": {
 		"title": "Autocomplete",
 		"settings": {
-			"autoTrigger": "自動觸發",
 			"triggers": "觸發器",
 			"keybindingDescription": "Autocomplete 功能可以透過指令觸發。你可以在<DocsLink>這裡設定鍵盤快速鍵</DocsLink>。",
 			"enableAutoTrigger": {
@@ -203,11 +210,11 @@
 				"description": "你停止輸入後 Kilo Code 觸發 Autocomplete 前的秒數延遲。延遲越短建議越快，但可能更耗費資源。"
 			},
 			"enableQuickInlineTaskKeybinding": {
-				"label": "快速工作",
+				"label": "快速任务 ({{keybinding}})",
 				"description": "只需要快速變更？選取一些程式碼（或不選！）然後按 Cmd+I。用簡單的中文描述你的目標（「用這些 props 建立 React 元件」，「為這個函數新增錯誤處理」），在編輯器中直接取得多個即用建議。<DocsLink>檢視快速鍵</DocsLink>"
 			},
 			"enableSmartInlineTaskKeybinding": {
-				"label": "手動 Autocomplete",
+				"label": "手动自动补全 ({{keybinding}})",
 				"description": "需要快速修正、補全或重構？Kilo 將使用周圍內容提供即時改進，保持你的工作流程。<DocsLink>檢視快速鍵</DocsLink>"
 			},
 			"enableCustomProvider": {
@@ -219,7 +226,8 @@
 				"label": "API 設定",
 				"current": "使用目前選取的 API 設定",
 				"description": "選取用於 Autocomplete 提示的 API 設定，或直接使用目前選取的設定"
-			}
+			},
+			"keybindingNotFound": "未找到"
 		}
 	},
 	"virtualProvider": {
@@ -244,8 +252,14 @@
 		"perHour": "每小時",
 		"requestsLabel": "請求"
 	},
+	"pagination": {
+		"previous": "上一頁",
+		"next": "下一頁",
+		"page": "第 {{page}} 頁 / 共 {{count}} 頁"
+	},
 	"imageWarnings": {
 		"modelNoImageSupport": "当前模型不支持图片。",
-		"maxImagesReached": "每条信息最多可发送20张图片。要添加更多图片，请先删除一些现有图片。"
+		"maxImagesReached": "每条信息最多可发送20张图片。要添加更多图片，请先删除一些现有图片。",
+		"imagesRemovedNoSupport": "已移除图像，模型不支持。"
 	}
 }

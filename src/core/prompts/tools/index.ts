@@ -25,11 +25,12 @@ import { getSwitchModeDescription } from "./switch-mode"
 import { getNewTaskDescription } from "./new-task"
 import { getCodebaseSearchDescription } from "./codebase-search"
 import { getUpdateTodoListDescription } from "./update-todo-list"
+import { getRunSlashCommandDescription } from "./run-slash-command"
 import { getGenerateImageDescription } from "./generate-image"
 import { CodeIndexManager } from "../../../services/code-index/manager"
-import { isMorphAvailable } from "../../tools/editFileTool"
 
 // kilocode_change start: Morph fast apply
+import { isFastApplyAvailable } from "../../tools/editFileTool"
 import { getEditFileDescription } from "./edit-file"
 import { type ClineProviderState } from "../../webview/ClineProvider"
 // kilocode_change end
@@ -64,6 +65,7 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	apply_diff: (args) =>
 		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",
 	update_todo_list: (args) => getUpdateTodoListDescription(args),
+	run_slash_command: () => getRunSlashCommandDescription(),
 	generate_image: (args) => getGenerateImageDescription(args),
 }
 
@@ -135,7 +137,7 @@ export function getToolDescriptionsForMode(
 	}
 
 	// kilocode_change start: Morph fast apply
-	if (isMorphAvailable(clineProviderState)) {
+	if (isFastApplyAvailable(clineProviderState)) {
 		// When Morph is enabled, disable traditional editing tools
 		const traditionalEditingTools = ["apply_diff", "write_to_file", "insert_content", "search_and_replace"]
 		traditionalEditingTools.forEach((tool) => tools.delete(tool))
@@ -152,6 +154,11 @@ export function getToolDescriptionsForMode(
 	// Conditionally exclude generate_image if experiment is not enabled
 	if (!experiments?.imageGeneration) {
 		tools.delete("generate_image")
+	}
+
+	// Conditionally exclude run_slash_command if experiment is not enabled
+	if (!experiments?.runSlashCommand) {
+		tools.delete("run_slash_command")
 	}
 
 	// Map tool descriptions for allowed tools
@@ -190,5 +197,6 @@ export {
 	getSearchAndReplaceDescription,
 	getEditFileDescription, // kilocode_change: Morph fast apply
 	getCodebaseSearchDescription,
+	getRunSlashCommandDescription,
 	getGenerateImageDescription,
 }

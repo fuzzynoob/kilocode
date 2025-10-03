@@ -1,4 +1,4 @@
-import { HTMLAttributes } from "react"
+import React, { HTMLAttributes } from "react"
 import { FlaskConical } from "lucide-react"
 
 import type { Experiments } from "@roo-code/types"
@@ -15,7 +15,7 @@ import {
 import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
 import { ExperimentalFeature } from "./ExperimentalFeature"
-import { MorphSettings } from "./MorphSettings" // kilocode_change: Use global version
+import { FastApplySettings } from "./FastApplySettings" // kilocode_change: Use Fast Apply version
 import { ImageGenerationSettings } from "./ImageGenerationSettings"
 
 type ExperimentalSettingsProps = HTMLAttributes<HTMLDivElement> & {
@@ -23,7 +23,8 @@ type ExperimentalSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	setExperimentEnabled: SetExperimentEnabled
 	// kilocode_change start
 	morphApiKey?: string
-	setCachedStateField: SetCachedStateField<"morphApiKey">
+	fastApplyModel?: string
+	setCachedStateField: SetCachedStateField<"morphApiKey" | "fastApplyModel">
 	kiloCodeImageApiKey?: string
 	setKiloCodeImageApiKey?: (apiKey: string) => void
 	currentProfileKilocodeToken?: string
@@ -48,6 +49,7 @@ export const ExperimentalSettings = ({
 	className,
 	// kilocode_change start
 	morphApiKey,
+	fastApplyModel, // kilocode_change: Fast Apply model selection
 	setCachedStateField,
 	setKiloCodeImageApiKey,
 	kiloCodeImageApiKey,
@@ -88,7 +90,7 @@ export const ExperimentalSettings = ({
 							const enabled =
 								experiments[EXPERIMENT_IDS[config[0] as keyof typeof EXPERIMENT_IDS]] ?? false
 							return (
-								<>
+								<React.Fragment key={config[0]}>
 									<ExperimentalFeature
 										key={config[0]}
 										experimentKey={config[0]}
@@ -101,12 +103,13 @@ export const ExperimentalSettings = ({
 										}
 									/>
 									{enabled && (
-										<MorphSettings
+										<FastApplySettings
 											setCachedStateField={setCachedStateField}
 											morphApiKey={morphApiKey}
+											fastApplyModel={fastApplyModel}
 										/>
 									)}
-								</>
+								</React.Fragment>
 							)
 						}
 						// kilocode_change end

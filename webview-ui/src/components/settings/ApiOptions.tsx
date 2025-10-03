@@ -37,7 +37,7 @@ import {
 	ioIntelligenceDefaultModelId,
 	rooDefaultModelId,
 	vercelAiGatewayDefaultModelId,
-	deepInfraDefaultModelId, // kilocode_change
+	deepInfraDefaultModelId,
 } from "@roo-code/types"
 
 import { vscode } from "@src/utils/vscode"
@@ -96,12 +96,12 @@ import {
 	// kilocode_change start
 	GeminiCli,
 	VirtualQuotaFallbackProvider,
-	DeepInfra,
 	// kilocode_change end
 	ZAi,
 	Fireworks,
 	Featherless,
 	VercelAiGateway,
+	DeepInfra,
 } from "./providers"
 
 import { MODELS_BY_PROVIDER, PROVIDERS } from "./constants"
@@ -119,7 +119,7 @@ import { ConsecutiveMistakeLimitControl } from "./ConsecutiveMistakeLimitControl
 import { BedrockCustomArn } from "./providers/BedrockCustomArn"
 import { KiloCode } from "../kilocode/settings/providers/KiloCode" // kilocode_change
 import { buildDocLink } from "@src/utils/docLinks"
-import { KiloProviderRouting } from "./providers/KiloProviderRouting"
+import { KiloProviderRouting, KiloProviderRoutingManagedByOrganization } from "./providers/KiloProviderRouting"
 import { OpenRouterMarkupInfoView } from "../kilocode/FreeModelsLink"
 
 export interface ApiOptionsProps {
@@ -151,6 +151,7 @@ const ApiOptions = ({
 	const {
 		organizationAllowList,
 		uiKind, // kilocode_change
+		kiloCodeWrapperProperties, // kilocode_change
 		kilocodeDefaultModel,
 		cloudIsAuthenticated,
 	} = useExtensionState()
@@ -248,7 +249,7 @@ const ApiOptions = ({
 					values: {
 						baseUrl: apiConfiguration?.openAiBaseUrl,
 						apiKey: apiConfiguration?.openAiApiKey,
-						customHeaders: {}, // Reserved for any additional headers
+						customHeaders: {}, // Reserved for any additional headers.
 						openAiHeaders: headerObject,
 					},
 				})
@@ -258,7 +259,7 @@ const ApiOptions = ({
 				vscode.postMessage({ type: "requestLmStudioModels" })
 			} else if (selectedProvider === "vscode-lm") {
 				vscode.postMessage({ type: "requestVsCodeLmModels" })
-			} else if (selectedProvider === "litellm") {
+			} else if (selectedProvider === "litellm" || selectedProvider === "deepinfra") {
 				vscode.postMessage({ type: "requestRouterModels" })
 			}
 		},
@@ -272,6 +273,8 @@ const ApiOptions = ({
 			apiConfiguration?.lmStudioBaseUrl,
 			apiConfiguration?.litellmBaseUrl,
 			apiConfiguration?.litellmApiKey,
+			apiConfiguration?.deepInfraApiKey,
+			apiConfiguration?.deepInfraBaseUrl,
 			customHeaders,
 		],
 	)
@@ -339,6 +342,7 @@ const ApiOptions = ({
 					}
 				>
 			> = {
+				deepinfra: { field: "deepInfraModelId", default: deepInfraDefaultModelId },
 				openrouter: { field: "openRouterModelId", default: openRouterDefaultModelId },
 				glama: { field: "glamaModelId", default: glamaDefaultModelId },
 				unbound: { field: "unboundModelId", default: unboundDefaultModelId },
@@ -378,7 +382,6 @@ const ApiOptions = ({
 				// kilocode_change start
 				kilocode: { field: "kilocodeModel", default: kilocodeDefaultModel },
 				"gemini-cli": { field: "apiModelId", default: geminiCliDefaultModelId },
-				deepinfra: { field: "deepInfraModelId", default: deepInfraDefaultModelId },
 				// kilocode_change end
 			}
 
@@ -408,16 +411,7 @@ const ApiOptions = ({
 
 		// kilocode_change start
 		// Providers that don't have documentation pages yet
-		const excludedProviders = [
-			"gemini-cli",
-			"moonshot",
-			"chutes",
-			"cerebras",
-			"virtual-quota-fallback",
-			"litellm",
-			"zai",
-			"qwen-code",
-		]
+		const excludedProviders = ["gemini-cli", "moonshot", "chutes", "cerebras", "litellm", "zai", "qwen-code"]
 
 		// Skip documentation link when the provider is excluded because documentation is not available
 		if (excludedProviders.includes(selectedProvider)) {
@@ -495,6 +489,7 @@ const ApiOptions = ({
 					organizationAllowList={organizationAllowList}
 					uriScheme={uriScheme}
 					uiKind={uiKind}
+					kiloCodeWrapperProperties={kiloCodeWrapperProperties}
 					kilocodeDefaultModel={kilocodeDefaultModel}
 				/>
 			)}
@@ -546,6 +541,17 @@ const ApiOptions = ({
 				/>
 			)}
 
+			{selectedProvider === "deepinfra" && (
+				<DeepInfra
+					apiConfiguration={apiConfiguration}
+					setApiConfigurationField={setApiConfigurationField}
+					routerModels={routerModels}
+					refetchRouterModels={refetchRouterModels}
+					organizationAllowList={organizationAllowList}
+					modelValidationError={modelValidationError}
+				/>
+			)}
+
 			{selectedProvider === "anthropic" && (
 				<Anthropic apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
 			)}
@@ -555,7 +561,11 @@ const ApiOptions = ({
 			)}
 
 			{selectedProvider === "openai-native" && (
-				<OpenAI apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
+				<OpenAI
+					apiConfiguration={apiConfiguration}
+					setApiConfigurationField={setApiConfigurationField}
+					selectedModelInfo={selectedModelInfo}
+				/>
 			)}
 
 			{selectedProvider === "mistral" && (
@@ -655,10 +665,6 @@ const ApiOptions = ({
 					setApiConfigurationField={setApiConfigurationField}
 				/>
 			)}
-
-			{selectedProvider === "qwen-code" && (
-				<QwenCode apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
-			)}
 			{/* kilocode_change end */}
 
 			{selectedProvider === "litellm" && (
@@ -687,20 +693,6 @@ const ApiOptions = ({
 				/>
 			)}
 
-			{
-				// kilocode_change start
-				selectedProvider === "deepinfra" && (
-					<DeepInfra
-						apiConfiguration={apiConfiguration}
-						setApiConfigurationField={setApiConfigurationField}
-						routerModels={routerModels}
-						refetchRouterModels={() => refetchRouterModels()}
-						organizationAllowList={organizationAllowList}
-						modelValidationError={modelValidationError}
-					/>
-				)
-				// kilocode_change end
-			}
 			{selectedProvider === "vercel-ai-gateway" && (
 				<VercelAiGateway
 					apiConfiguration={apiConfiguration}
@@ -820,13 +812,16 @@ const ApiOptions = ({
 
 			{
 				// kilocode_change start
-				(selectedProvider === "kilocode" || selectedProvider === "openrouter") && (
-					<KiloProviderRouting
-						apiConfiguration={apiConfiguration}
-						setApiConfigurationField={setApiConfigurationField}
-						kilocodeDefaultModel={kilocodeDefaultModel}
-					/>
-				)
+				(selectedProvider === "kilocode" || selectedProvider === "openrouter") &&
+					(apiConfiguration.kilocodeOrganizationId ? (
+						<KiloProviderRoutingManagedByOrganization />
+					) : (
+						<KiloProviderRouting
+							apiConfiguration={apiConfiguration}
+							setApiConfigurationField={setApiConfigurationField}
+							kilocodeDefaultModel={kilocodeDefaultModel}
+						/>
+					))
 				// kilocode_change end
 			}
 
