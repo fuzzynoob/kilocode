@@ -30,7 +30,6 @@ export class NewLineCompletionStrategy extends BasePromptStrategy {
 		return {
 			document: context.document,
 			range: context.range,
-			rangeASTNode: context.rangeASTNode,
 			recentOperations: context.recentOperations,
 			// Exclude:
 			// - userInput (no explicit request)
@@ -94,12 +93,6 @@ Important:
 		// Add recent operations if available
 		if (context.recentOperations && context.recentOperations.length > 0) {
 			prompt += this.formatRecentOperations(context.recentOperations)
-			prompt += "\n"
-		}
-
-		// Add AST context if available
-		if (context.rangeASTNode) {
-			prompt += this.formatASTContext(context.rangeASTNode)
 			prompt += "\n"
 		}
 

@@ -22,8 +22,6 @@ export class SelectionRefactorStrategy extends BasePromptStrategy {
 			document: context.document,
 			range: context.range,
 			diagnostics: context.diagnostics,
-			documentAST: context.documentAST,
-			rangeASTNode: context.rangeASTNode,
 		}
 	}
 
@@ -74,11 +72,6 @@ Remember: The goal is to improve the code quality while keeping the exact same b
 
 		if (context.diagnostics && context.diagnostics.length > 0) {
 			prompt += this.formatDiagnostics(context.diagnostics)
-			prompt += "\n"
-		}
-
-		if (context.rangeASTNode) {
-			prompt += this.formatASTContext(context.rangeASTNode)
 			prompt += "\n"
 		}
 

@@ -11,7 +11,6 @@ export enum UseCaseType {
 	COMMENT_DRIVEN = "COMMENT_DRIVEN",
 	SELECTION_REFACTOR = "SELECTION_REFACTOR",
 	AUTO_TRIGGER = "AUTO_TRIGGER",
-	AST_AWARE = "AST_AWARE",
 }
 
 /**
@@ -110,9 +109,4 @@ export interface ContextAnalysis {
 	 * The cursor's character position
 	 */
 	cursorPosition: number
-
-	/**
-	 * The AST node type at the cursor position
-	 */
-	astNodeType?: string
 }

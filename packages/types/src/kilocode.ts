@@ -6,8 +6,6 @@ export const ghostServiceSettingsSchema = z
 		autoTriggerDelay: z.number().min(1).max(30).default(3).optional(),
 		enableQuickInlineTaskKeybinding: z.boolean().optional(),
 		enableSmartInlineTaskKeybinding: z.boolean().optional(),
-		enableCustomProvider: z.boolean().optional(),
-		apiConfigId: z.string().optional(),
 		showGutterAnimation: z.boolean().optional(),
 	})
 	.optional()
@@ -16,6 +14,7 @@ export type GhostServiceSettings = z.infer<typeof ghostServiceSettingsSchema>
 
 export const commitRangeSchema = z.object({
 	from: z.string(),
+	fromTimeStamp: z.number().optional(),
 	to: z.string(),
 })
 

@@ -218,31 +218,6 @@ ${selectedText}
 	}
 
 	/**
-	 * Formats AST information for inclusion in prompts
-	 */
-	protected formatASTContext(node: any): string {
-		if (!node) return ""
-
-		let result = "## AST Context\n"
-		result += `- Current Node: \`${node.type}\`\n`
-
-		if (node.parent) {
-			result += `- Parent Node: \`${node.parent.type}\`\n`
-		}
-
-		// Calculate nesting level
-		let level = 0
-		let current = node
-		while (current.parent) {
-			level++
-			current = current.parent
-		}
-		result += `- Nesting Level: ${level}\n`
-
-		return result
-	}
-
-	/**
 	 * Helper to check if a line appears to be incomplete
 	 */
 	protected isIncompleteStatement(line: string): boolean {

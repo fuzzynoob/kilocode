@@ -34,8 +34,6 @@ export class CommentDrivenStrategy extends BasePromptStrategy {
 		return {
 			document: context.document,
 			range: context.range,
-			documentAST: context.documentAST,
-			rangeASTNode: context.rangeASTNode,
 			recentOperations: context.recentOperations,
 		}
 	}
@@ -91,11 +89,6 @@ export class CommentDrivenStrategy extends BasePromptStrategy {
 		let prompt = `## Comment-Driven Development\n`
 		prompt += `- Language: ${language}\n`
 		prompt += `- Comment to Implement:\n\`\`\`\n${comment}\n\`\`\`\n\n`
-
-		if (context.rangeASTNode) {
-			prompt += this.formatASTContext(context.rangeASTNode)
-			prompt += "\n"
-		}
 
 		// Add the full document with cursor marker
 		if (context.document) {

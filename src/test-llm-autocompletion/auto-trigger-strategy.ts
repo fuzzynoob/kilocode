@@ -50,7 +50,6 @@ export class AutoTriggerStrategyTester {
 			diagnostics: [],
 			openFiles: [],
 			userInput: undefined,
-			rangeASTNode: undefined,
 		}
 	}
 

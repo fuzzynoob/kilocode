@@ -29,8 +29,6 @@ export class InlineCompletionStrategy extends BasePromptStrategy {
 		return {
 			document: context.document,
 			range: context.range,
-			documentAST: context.documentAST,
-			rangeASTNode: context.rangeASTNode,
 		}
 	}
 
@@ -93,11 +91,6 @@ export class InlineCompletionStrategy extends BasePromptStrategy {
 		prompt += `- Current Line Before Cursor: \`${beforeCursor}\`\n`
 		prompt += `- Current Line After Cursor: \`${afterCursor}\`\n`
 		prompt += `- Completion Type: ${completionType}\n\n`
-
-		if (context.rangeASTNode) {
-			prompt += this.formatASTContext(context.rangeASTNode)
-			prompt += "\n"
-		}
 
 		// Add the full document with cursor marker
 		if (context.document) {

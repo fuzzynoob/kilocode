@@ -7,7 +7,7 @@ import { checkApproval } from "./approvals.js"
 
 interface TestResult {
 	testCase: TestCase
-	passed: boolean
+	isApproved: boolean
 	completion: string
 	error?: string
 	actualValue?: string
@@ -36,8 +36,6 @@ class TestRunner {
 			const changes = this.strategyTester.parseCompletion(completion)
 
 			let actualValue: string
-			let passed = false
-			let newOutput = false
 
 			if (changes.length > 0) {
 				// Apply the change: replace search with replace in the input
@@ -49,21 +47,17 @@ class TestRunner {
 
 			const approvalResult = await checkApproval(testCase.category, testCase.name, testCase.input, actualValue)
 
-			passed = approvalResult.approved
-			newOutput = approvalResult.newOutput
-
 			return {
+				...approvalResult,
 				testCase,
-				passed,
 				completion,
 				actualValue,
-				newOutput,
 				llmRequestDuration,
 			}
 		} catch (error) {
 			return {
 				testCase,
-				passed: false,
+				isApproved: false,
 				completion: "",
 				error: error instanceof Error ? error.message : String(error),
 			}
@@ -90,7 +84,7 @@ class TestRunner {
 				const result = await this.runTest(testCase)
 				this.results.push(result)
 
-				if (result.passed) {
+				if (result.isApproved) {
 					console.log("✓ PASSED")
 					if (result.newOutput) {
 						console.log(`    (New output approved)`)
@@ -100,8 +94,24 @@ class TestRunner {
 					if (result.error) {
 						console.log(`    Error: ${result.error}`)
 					} else {
-						console.log(`    Input: "${testCase.input.replace(/\n/g, "\\n")}"`)
-						console.log(`    Got: "${result.actualValue?.replace(/\n/g, "\\n")}"`)
+						console.log(`    Input:`)
+						console.log("    " + "─".repeat(76))
+						console.log(
+							testCase.input
+								.split("\n")
+								.map((l) => "    " + l)
+								.join("\n"),
+						)
+						console.log("    " + "─".repeat(76))
+						console.log(`    Got:`)
+						console.log("    " + "─".repeat(76))
+						console.log(
+							(result.actualValue || "")
+								.split("\n")
+								.map((l) => "    " + l)
+								.join("\n"),
+						)
+						console.log("    " + "─".repeat(76))
 
 						if (this.verbose && result.completion) {
 							console.log("    Full XML Response:")
@@ -128,8 +138,8 @@ class TestRunner {
 		console.log("\n" + "═".repeat(80))
 		console.log("\n📊 Test Summary\n")
 
-		const passed = this.results.filter((r) => r.passed).length
-		const failed = this.results.filter((r) => !r.passed).length
+		const passed = this.results.filter((r) => r.isApproved).length
+		const failed = this.results.filter((r) => !r.isApproved).length
 		const passRate = ((passed / this.results.length) * 100).toFixed(1)
 
 		console.log(`  ✓ Passed: ${passed}`)
@@ -150,7 +160,7 @@ class TestRunner {
 		console.log("\n📁 Category Breakdown:")
 		for (const category of getCategories()) {
 			const categoryResults = this.results.filter((r) => r.testCase.category === category)
-			const categoryPassed = categoryResults.filter((r) => r.passed).length
+			const categoryPassed = categoryResults.filter((r) => r.isApproved).length
 			const categoryTotal = categoryResults.length
 			const categoryRate = ((categoryPassed / categoryTotal) * 100).toFixed(0)
 
@@ -160,7 +170,7 @@ class TestRunner {
 		}
 
 		// Failed tests details
-		const failedResults = this.results.filter((r) => !r.passed)
+		const failedResults = this.results.filter((r) => !r.isApproved)
 		if (failedResults.length > 0) {
 			console.log("\n❌ Failed Tests:")
 			for (const result of failedResults) {
@@ -186,41 +196,97 @@ class TestRunner {
 			process.exit(1)
 		}
 
-		console.log(`\n🧪 Running Single Test: ${testName}\n`)
+		const numRuns = 5
+
+		console.log(`\n🧪 Running Single Test: ${testName} (${numRuns} times)\n`)
 		console.log("Category:", testCase.category)
 		console.log("Description:", testCase.description)
 		console.log("\nInput Code:")
 		console.log(testCase.input)
+		console.log("\n" + "═".repeat(80))
 
-		const result = await this.runTest(testCase)
+		const results: TestResult[] = []
 
-		console.log("\n" + "─".repeat(40))
+		for (let i = 0; i < numRuns; i++) {
+			console.log(`\n🔄 Run ${i + 1}/${numRuns}...`)
 
-		if (result.passed) {
-			console.log("\n✓ TEST PASSED")
-			if (result.newOutput) {
+			const result = await this.runTest(testCase)
+
+			results.push(result)
+
+			const status = result.isApproved ? "✓ PASSED" : "✗ FAILED"
+			const llmTime = result.llmRequestDuration ? `${result.llmRequestDuration.toFixed(0)}ms LLM` : "N/A"
+			console.log(`   ${status} - ${llmTime}`)
+		}
+
+		console.log("\n" + "═".repeat(80))
+		console.log("\n📊 Test Statistics\n")
+
+		const passedRuns = results.filter((r) => r.isApproved).length
+		const failedRuns = numRuns - passedRuns
+		console.log(`  ✓ Passed: ${passedRuns}/${numRuns}`)
+		console.log(`  ✗ Failed: ${failedRuns}/${numRuns}`)
+
+		const llmTimes = results.filter((r) => r.llmRequestDuration !== undefined).map((r) => r.llmRequestDuration!)
+		if (llmTimes.length > 0) {
+			const sortedLlmTimes = [...llmTimes].sort((a, b) => a - b)
+			const avgLlmTime = llmTimes.reduce((sum, time) => sum + time, 0) / llmTimes.length
+			const minLlmTime = sortedLlmTimes[0]
+			const maxLlmTime = sortedLlmTimes[sortedLlmTimes.length - 1]
+			const medianLlmTime = sortedLlmTimes[Math.floor(llmTimes.length / 2)]
+
+			console.log("\n⚡ LLM Request Time:")
+			console.log(`  Average: ${avgLlmTime.toFixed(0)}ms`)
+			console.log(`  Median:  ${medianLlmTime.toFixed(0)}ms`)
+			console.log(`  Min:     ${minLlmTime.toFixed(0)}ms`)
+			console.log(`  Max:     ${maxLlmTime.toFixed(0)}ms`)
+		}
+
+		const lastResult = results[results.length - 1]
+
+		console.log("\n" + "═".repeat(80))
+		console.log("\n📝 Last Run Details\n")
+
+		if (lastResult.isApproved) {
+			console.log("✓ TEST PASSED")
+			if (lastResult.newOutput) {
 				console.log("(New output approved)")
 			}
 		} else {
-			console.log("\n✗ TEST FAILED")
-			if (result.error) {
-				console.log(`Error: ${result.error}`)
+			console.log("✗ TEST FAILED")
+			if (lastResult.error) {
+				console.log(`Error: ${lastResult.error}`)
 			} else {
 				console.log("\nExtracted value being tested:")
-				console.log(`  "${result.actualValue}"`)
+				console.log(`  "${lastResult.actualValue}"`)
 			}
 		}
 
-		if (result.completion) {
-			const changes = this.strategyTester.parseCompletion(result.completion)
+		if (lastResult.completion) {
+			const changes = this.strategyTester.parseCompletion(lastResult.completion)
 			if (changes.length > 0) {
 				console.log("\nParsed Changes:")
 				changes.forEach((change, i) => {
 					console.log(`Change ${i + 1}:`)
-					console.log("  Search:", change.search.replace(/\n/g, "\\n"))
-					console.log("  Replace:", change.replace.replace(/\n/g, "\\n"))
+					console.log("  Search:")
+					console.log("  " + "─".repeat(78))
+					console.log(
+						change.search
+							.split("\n")
+							.map((l) => "  " + l)
+							.join("\n"),
+					)
+					console.log("  " + "─".repeat(78))
+					console.log("  Replace:")
+					console.log("  " + "─".repeat(78))
+					console.log(
+						change.replace
+							.split("\n")
+							.map((l) => "  " + l)
+							.join("\n"),
+					)
+					console.log("  " + "─".repeat(78))
 
-					// Show what was extracted for testing
 					const extracted = change.replace.replace(testCase.input, "").trim()
 					console.log("  Extracted for test:", extracted || "(full replacement)")
 				})
@@ -229,10 +295,12 @@ class TestRunner {
 			}
 
 			console.log("\nFull LLM Response:")
-			console.log(result.completion)
+			console.log(lastResult.completion)
 		}
 
-		process.exit(result.passed ? 0 : 1)
+		console.log("\n" + "═".repeat(80) + "\n")
+
+		process.exit(passedRuns === numRuns ? 0 : 1)
 	}
 }
 

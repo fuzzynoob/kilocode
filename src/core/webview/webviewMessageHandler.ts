@@ -800,8 +800,10 @@ export const webviewMessageHandler = async (
 				requesty: {},
 				unbound: {},
 				glama: {},
+				chutes: {}, // kilocode_change
 				ollama: {},
 				lmstudio: {},
+				ovhcloud: {}, // kilocode_change
 			}
 
 			const safeGetModels = async (options: GetModelsOptions): Promise<ModelRecord> => {
@@ -836,6 +838,7 @@ export const webviewMessageHandler = async (
 				},
 				{ key: "glama", options: { provider: "glama" } },
 				{ key: "unbound", options: { provider: "unbound", apiKey: apiConfiguration.unboundApiKey } },
+				{ key: "chutes", options: { provider: "chutes", apiKey: apiConfiguration.chutesApiKey } }, // kilocode_change
 				{
 					key: "kilocode-openrouter",
 					options: {
@@ -854,6 +857,12 @@ export const webviewMessageHandler = async (
 						baseUrl: apiConfiguration.deepInfraBaseUrl,
 					},
 				},
+				// kilocode_change start
+				{
+					key: "ovhcloud",
+					options: { provider: "ovhcloud", apiKey: apiConfiguration.ovhCloudAiEndpointsApiKey },
+				},
+				// kilocode_change end
 			]
 			// kilocode_change end
 

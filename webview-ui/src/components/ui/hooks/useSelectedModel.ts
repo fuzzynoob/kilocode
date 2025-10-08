@@ -29,7 +29,7 @@ import {
 	xaiModels,
 	groqModels,
 	groqDefaultModelId,
-	chutesModels,
+	// chutesModels, // kilocode_change
 	chutesDefaultModelId,
 	vscodeLlmModels,
 	vscodeLlmDefaultModelId,
@@ -50,6 +50,8 @@ import {
 	mainlandZAiModels,
 	fireworksModels,
 	fireworksDefaultModelId,
+	syntheticModels, // kilocode_change
+	syntheticDefaultModelId, // kilocode_change
 	featherlessModels,
 	featherlessDefaultModelId,
 	ioIntelligenceDefaultModelId,
@@ -61,6 +63,7 @@ import {
 	vercelAiGatewayDefaultModelId,
 	BEDROCK_1M_CONTEXT_MODEL_IDS,
 	deepInfraDefaultModelId,
+	ovhCloudAiEndpointsDefaultModelId, // kilocode_change
 } from "@roo-code/types"
 
 import type { ModelRecord, RouterModels } from "@roo/api"
@@ -220,7 +223,7 @@ function getSelectedModel({
 		}
 		case "chutes": {
 			const id = apiConfiguration.apiModelId ?? chutesDefaultModelId
-			const info = chutesModels[id as keyof typeof chutesModels]
+			const info = routerModels.chutes[id] // kilocode_change
 			return { id, info }
 		}
 		case "bedrock": {
@@ -397,6 +400,13 @@ function getSelectedModel({
 			const info = fireworksModels[id as keyof typeof fireworksModels]
 			return { id, info }
 		}
+		// kilocode_change start
+		case "synthetic": {
+			const id = apiConfiguration.apiModelId ?? syntheticDefaultModelId
+			const info = syntheticModels[id as keyof typeof syntheticModels]
+			return { id, info }
+		}
+		// kilocode_change end
 		case "featherless": {
 			const id = apiConfiguration.apiModelId ?? featherlessDefaultModelId
 			const info = featherlessModels[id as keyof typeof featherlessModels]
@@ -435,6 +445,13 @@ function getSelectedModel({
 			const info = routerModels["vercel-ai-gateway"]?.[id]
 			return { id, info }
 		}
+		// kilocode_change start
+		case "ovhcloud": {
+			const id = apiConfiguration.ovhCloudAiEndpointsModelId ?? ovhCloudAiEndpointsDefaultModelId
+			const info = routerModels.ovhcloud[id]
+			return { id, info }
+		}
+		// kilocode_change end
 		// case "anthropic":
 		// case "human-relay":
 		// case "fake-ai":

@@ -28,11 +28,9 @@ export class UserRequestStrategy extends BasePromptStrategy {
 			userInput: context.userInput,
 			range: context.range,
 			diagnostics: context.diagnostics,
-			rangeASTNode: context.rangeASTNode,
 			// Explicitly exclude:
 			// - recentOperations (not needed for explicit requests)
 			// - openFiles (reduces token usage)
-			// - documentAST (full AST not needed, rangeASTNode is enough)
 		}
 	}
 
@@ -98,12 +96,6 @@ Common Request Patterns:
 		// Include diagnostics if present (user might be asking to fix them)
 		if (context.diagnostics && context.diagnostics.length > 0) {
 			prompt += this.formatDiagnostics(context.diagnostics)
-			prompt += "\n"
-		}
-
-		// Add AST context if available
-		if (context.rangeASTNode) {
-			prompt += this.formatASTContext(context.rangeASTNode)
 			prompt += "\n"
 		}
 

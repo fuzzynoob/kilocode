@@ -22,7 +22,6 @@ export class ErrorFixStrategy extends BasePromptStrategy {
 			document: context.document,
 			diagnostics: context.diagnostics,
 			range: context.range,
-			rangeASTNode: context.rangeASTNode,
 			// Exclude:
 			// - userInput (no explicit request)
 			// - recentOperations (not relevant for error fixing)
@@ -119,12 +118,6 @@ Important:
 			})
 
 			prompt += "\n"
-		}
-
-		// Add AST context if available
-		if (context.rangeASTNode) {
-			prompt += this.formatASTContext(context.rangeASTNode)
-			prompt += "This can help you understand the code structure around the errors.\n\n"
 		}
 
 		// Add cursor position context
