@@ -20,6 +20,8 @@ import { TelemetryService } from "@roo-code/telemetry"
 import { ClineProvider } from "../../core/webview/ClineProvider"
 import { GhostGutterAnimation } from "./GhostGutterAnimation"
 import { GhostCursor } from "./GhostCursor"
+import { RooIgnoreController } from "../../core/ignore/RooIgnoreController"
+import { normalizeAutoTriggerDelayToMs } from "./utils/autocompleteDelayUtils"
 
 export class GhostProvider {
 	private static instance: GhostProvider | null = null
@@ -55,6 +57,8 @@ export class GhostProvider {
 	public codeActionProvider: GhostCodeActionProvider
 	public codeLensProvider: GhostCodeLensProvider
 
+	private ignoreController?: Promise<RooIgnoreController>
+
 	private constructor(context: vscode.ExtensionContext, cline: ClineProvider) {
 		this.context = context
 		this.cline = cline
@@ -78,6 +82,7 @@ export class GhostProvider {
 		vscode.workspace.onDidChangeTextDocument(this.onDidChangeTextDocument, this, context.subscriptions)
 		vscode.workspace.onDidOpenTextDocument(this.onDidOpenTextDocument, this, context.subscriptions)
 		vscode.workspace.onDidCloseTextDocument(this.onDidCloseTextDocument, this, context.subscriptions)
+		vscode.workspace.onDidChangeWorkspaceFolders(this.onDidChangeWorkspaceFolders, this, context.subscriptions)
 		vscode.window.onDidChangeTextEditorSelection(this.onDidChangeTextEditorSelection, this, context.subscriptions)
 		vscode.window.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditor, this, context.subscriptions)
 
@@ -157,6 +162,29 @@ export class GhostProvider {
 		this.documentStore.removeDocument(document.uri)
 	}
 
+	private initializeIgnoreController() {
+		if (!this.ignoreController) {
+			this.ignoreController = (async () => {
+				const ignoreController = new RooIgnoreController(this.cline.cwd)
+				await ignoreController.initialize()
+				return ignoreController
+			})()
+		}
+		return this.ignoreController
+	}
+
+	private async disposeIgnoreController() {
+		if (this.ignoreController) {
+			const ignoreController = this.ignoreController
+			delete this.ignoreController
+			;(await ignoreController).dispose()
+		}
+	}
+
+	private onDidChangeWorkspaceFolders() {
+		this.disposeIgnoreController()
+	}
+
 	private async onDidOpenTextDocument(document: vscode.TextDocument): Promise<void> {
 		if (!this.enabled || document.uri.scheme !== "file") {
 			return
@@ -226,6 +254,10 @@ export class GhostProvider {
 		await this.provideCodeSuggestions({ document, range, userInput })
 	}
 
+	private async hasAccess(document: vscode.TextDocument) {
+		return document.isUntitled || (await this.initializeIgnoreController()).validateAccess(document.fileName)
+	}
+
 	public async codeSuggestion() {
 		if (!this.enabled) {
 			return
@@ -241,6 +273,10 @@ export class GhostProvider {
 		})
 
 		const document = editor.document
+		if (!(await this.hasAccess(document))) {
+			return
+		}
+
 		const range = editor.selection.isEmpty ? undefined : editor.selection
 
 		await this.provideCodeSuggestions({ document, range })
@@ -253,8 +289,7 @@ export class GhostProvider {
 		this.isRequestCancelled = false
 
 		const context = await this.ghostContext.generate(initialContext)
-		const systemPrompt = this.strategy.getSystemPrompt(context)
-		const userPrompt = this.strategy.getSuggestionPrompt(context)
+		const { systemPrompt, userPrompt } = this.strategy.getPrompts(context)
 		if (this.isRequestCancelled) {
 			return
 		}
@@ -672,8 +707,7 @@ export class GhostProvider {
 		// Clear any existing timer
 		this.clearAutoTriggerTimer()
 		this.startProcessing()
-		// Start a new timer
-		const delay = (this.settings?.autoTriggerDelay || 3) * 1000
+		const delay = normalizeAutoTriggerDelayToMs(this.settings?.autoTriggerDelay)
 		this.autoTriggerTimer = setTimeout(() => {
 			this.onAutoTriggerTimeout()
 		}, delay)
@@ -731,6 +765,8 @@ export class GhostProvider {
 
 		this.statusBar?.dispose()
 		this.cursorAnimation.dispose()
+
+		this.disposeIgnoreController()
 
 		GhostProvider.instance = null // Reset singleton
 	}

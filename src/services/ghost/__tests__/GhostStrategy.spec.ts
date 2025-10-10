@@ -232,25 +232,39 @@ describe("GhostStrategy", () => {
 	})
 
 	describe("prompt generation", () => {
-		it("should generate system prompt", () => {
-			const context: GhostSuggestionContext = {
-				document: mockDocument,
-			}
-			const systemPrompt = strategy.getSystemPrompt(context)
-			expect(systemPrompt).toContain("CRITICAL OUTPUT FORMAT")
-			expect(systemPrompt).toContain("XML-formatted changes")
-		})
-
-		it("should generate suggestion prompt with context", () => {
+		it("should generate both prompts efficiently with getPrompts", () => {
 			const context: GhostSuggestionContext = {
 				document: mockDocument,
 				userInput: "Add a comment",
 				range: new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0)),
 			}
 
-			const suggestionPrompt = strategy.getSuggestionPrompt(context)
-			expect(suggestionPrompt).toContain("Add a comment")
-			expect(suggestionPrompt).toContain("<<<AUTOCOMPLETE_HERE>>>")
+			const { systemPrompt, userPrompt } = strategy.getPrompts(context)
+			expect(systemPrompt).toContain("CRITICAL OUTPUT FORMAT")
+			expect(systemPrompt).toContain("XML-formatted changes")
+			expect(userPrompt).toContain("Add a comment")
+			expect(userPrompt).toContain("<<<AUTOCOMPLETE_HERE>>>")
+		})
+
+		it("should generate system prompt via getPrompts", () => {
+			const context: GhostSuggestionContext = {
+				document: mockDocument,
+			}
+			const { systemPrompt } = strategy.getPrompts(context)
+			expect(systemPrompt).toContain("CRITICAL OUTPUT FORMAT")
+			expect(systemPrompt).toContain("XML-formatted changes")
+		})
+
+		it("should generate suggestion prompt with context via getPrompts", () => {
+			const context: GhostSuggestionContext = {
+				document: mockDocument,
+				userInput: "Add a comment",
+				range: new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0)),
+			}
+
+			const { userPrompt } = strategy.getPrompts(context)
+			expect(userPrompt).toContain("Add a comment")
+			expect(userPrompt).toContain("<<<AUTOCOMPLETE_HERE>>>")
 		})
 	})
 })

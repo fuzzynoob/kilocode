@@ -10,12 +10,12 @@ import { ApiStream } from "../transform/stream"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { calculateApiCostOpenAI } from "../../shared/cost"
 
-export class OVHCloudAIEndpointsHandler extends RouterProvider implements SingleCompletionHandler {
+export class OVHcloudAIEndpointsHandler extends RouterProvider implements SingleCompletionHandler {
 	constructor(options: ApiHandlerOptions) {
 		super({
 			options,
 			name: "ovhcloud",
-			baseURL: "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
+			baseURL: `${options.ovhCloudAiEndpointsBaseUrl || "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1"}`,
 			apiKey: options.ovhCloudAiEndpointsApiKey,
 			modelId: options.ovhCloudAiEndpointsModelId,
 			defaultModelId: ovhCloudAiEndpointsDefaultModelId,
@@ -83,7 +83,7 @@ export class OVHCloudAIEndpointsHandler extends RouterProvider implements Single
 			return response.choices[0]?.message.content || ""
 		} catch (error) {
 			if (error instanceof Error) {
-				throw new Error(`OVHCloud AI Endpoints completion error: ${error.message}`)
+				throw new Error(`OVHcloud AI Endpoints completion error: ${error.message}`)
 			}
 
 			throw error

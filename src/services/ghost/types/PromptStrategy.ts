@@ -11,6 +11,7 @@ export enum UseCaseType {
 	COMMENT_DRIVEN = "COMMENT_DRIVEN",
 	SELECTION_REFACTOR = "SELECTION_REFACTOR",
 	AUTO_TRIGGER = "AUTO_TRIGGER",
+	FIM_CODESTRAL = "FIM_CODESTRAL",
 }
 
 /**
@@ -35,13 +36,6 @@ export interface PromptStrategy {
 	canHandle(context: GhostSuggestionContext): boolean
 
 	/**
-	 * Filters the context to only include relevant fields for this strategy
-	 * @param context The full suggestion context
-	 * @returns Partial context with only relevant fields
-	 */
-	getRelevantContext(context: GhostSuggestionContext): Partial<GhostSuggestionContext>
-
-	/**
 	 * Generates system instructions for the AI model
 	 * @param customInstructions Optional custom instructions to append
 	 * @returns The complete system prompt
@@ -54,59 +48,4 @@ export interface PromptStrategy {
 	 * @returns The user prompt
 	 */
 	getUserPrompt(context: GhostSuggestionContext): string
-}
-
-/**
- * Result of analyzing a suggestion context
- */
-export interface ContextAnalysis {
-	/**
-	 * The primary use case detected
-	 */
-	useCase: UseCaseType
-
-	/**
-	 * Whether the user provided explicit input
-	 */
-	hasUserInput: boolean
-
-	/**
-	 * Whether there are compilation errors
-	 */
-	hasErrors: boolean
-
-	/**
-	 * Whether there are warnings
-	 */
-	hasWarnings: boolean
-
-	/**
-	 * Whether text is selected
-	 */
-	hasSelection: boolean
-
-	/**
-	 * Whether the cursor is in a comment
-	 */
-	isInComment: boolean
-
-	/**
-	 * Whether the cursor is on a new/empty line
-	 */
-	isNewLine: boolean
-
-	/**
-	 * Whether the cursor is in the middle of a line
-	 */
-	isInlineEdit: boolean
-
-	/**
-	 * The text of the current line
-	 */
-	cursorLine: string
-
-	/**
-	 * The cursor's character position
-	 */
-	cursorPosition: number
 }

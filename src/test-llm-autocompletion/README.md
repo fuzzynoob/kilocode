@@ -46,9 +46,31 @@ pnpm run test
 # Run with verbose output
 pnpm run test:verbose
 
+# Run without interactive approval (fail if not already approved)
+pnpm run test --skip-approval
+
 # Run a single test
 pnpm run test closing-brace
+
+# Combine flags
+pnpm run test --verbose --skip-approval
 ```
+
+### Skip Approval Mode
+
+Use `--skip-approval` (or `-sa`) to run tests in CI/CD or when you want to avoid interactive prompts:
+
+- Tests that match previously approved outputs will **pass**
+- Tests that match previously rejected outputs will **fail**
+- Tests with new outputs (not previously approved or rejected) will be marked as **unknown** without prompting
+
+The accuracy calculation only includes passed and failed tests, excluding unknown tests. This gives you a true measure of how the model performs on known cases.
+
+This is useful for:
+
+- Running tests in CI/CD pipelines
+- Regression testing to ensure outputs haven't changed
+- Validating that all test outputs have been reviewed
 
 ## User Interaction
 
