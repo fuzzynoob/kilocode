@@ -41,7 +41,6 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 	protected options: ApiHandlerOptions
 
 	private keyManager: GeminiKeyManager
-	private isVertex: boolean
 	private project: string
 	private location: string
 	private _testClient?: GoogleGenAI // For testing purposes
