@@ -143,13 +143,6 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 	 * Execute an operation with retry logic across multiple API keys
 	 */
 	private async executeWithRetry<T>(operation: (client: GoogleGenAI, apiKey: string) => Promise<T>): Promise<T> {
-		console.log("[GeminiHandler] executeWithRetry starting:", {
-			isConfigured: this.keyManager.isConfigured(),
-			totalKeys: this.keyManager.getKeyCount(),
-			availableKeys: this.keyManager.getAvailableKeys().length,
-			failedKeys: this.keyManager.getFailedKeys().length,
-		})
-
 		if (!this.keyManager.isConfigured()) {
 			console.error("[GeminiHandler] No keys configured!")
 			throw new Error(t("common:errors.gemini.no_api_key"))
@@ -183,20 +176,13 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 				)
 				const result = await operation(client, currentKey)
 
-				console.log("[GeminiHandler] Operation successful!", {
-					hadFailedKeys: this.keyManager.getFailedKeys().length > 0,
-					usedShuffledRoundRobin: true,
-				})
-
 				// Success - reset failed keys if we had failures before
 				if (this.keyManager.getFailedKeys().length > 0) {
-					console.log("[GeminiHandler] Resetting failed keys after success")
 					this.keyManager.resetFailedKeys()
 				}
 
 				// Move to next key for subsequent requests in this session
 				this.keyManager.getNextKey()
-				console.log("[GeminiHandler] Request completed successfully, advanced to next key for future requests")
 
 				return result
 			} catch (error) {
@@ -227,7 +213,6 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 
 				// Move to next available key for retry
 				this.keyManager.moveToNextAvailableKey()
-				console.log("[GeminiHandler] Will try again with next available key from shuffled list")
 			}
 		}
 
@@ -280,11 +265,9 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): ApiStream {
 		await this.ensureModelsLoaded() // kilocode_change
-		console.log("[GeminiHandler] createMessage called")
 
 		// Shuffle keys at the start of this prompt session
 		this.keyManager.shuffleKeys()
-		console.log("[GeminiHandler] Keys shuffled for new prompt session")
 
 		const { id: model, info, reasoning: thinkingConfig, maxTokens } = this.getModel()
 
@@ -311,13 +294,11 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		const params: GenerateContentParameters = { model, contents, config }
 
 		try {
-			console.log("[GeminiHandler] Starting createMessage with model:", model)
 			const result = await this.executeWithRetry(async (client, apiKey) => {
 				console.log(`[GeminiHandler] Attempting generateContentStream with key: ${apiKey.substring(0, 10)}...`)
 				return await client.models.generateContentStream(params)
 			})
 
-			console.log("[GeminiHandler] Successfully got stream result, processing chunks...")
 			let lastUsageMetadata: GenerateContentResponseUsageMetadata | undefined
 			let pendingGroundingMetadata: GroundingMetadata | undefined
 			let hasContent = false // Track if we received any content
@@ -325,11 +306,6 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 
 			for await (const chunk of result) {
 				chunkCount++
-				console.log(`[GeminiHandler] Processing chunk ${chunkCount}:`, {
-					hasCandidates: !!(chunk.candidates && chunk.candidates.length > 0),
-					hasText: !!chunk.text,
-					hasUsageMetadata: !!chunk.usageMetadata,
-				})
 				// Process candidates and their parts to separate thoughts from content
 				if (chunk.candidates && chunk.candidates.length > 0) {
 					const candidate = chunk.candidates[0]
@@ -345,9 +321,6 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 					}
 
 					if (candidate.content && candidate.content.parts) {
-						console.log(
-							`[GeminiHandler] Processing ${candidate.content.parts.length} parts in chunk ${chunkCount}`,
-						)
 						for (const part of candidate.content.parts) {
 							if (part.thought) {
 								// This is a thinking/reasoning part
@@ -404,19 +377,14 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 				}
 			}
 
-			console.log(`[GeminiHandler] Finished processing ${chunkCount} chunks, hasContent:`, hasContent)
-
 			// If no content was received, yield a minimal response to prevent "no assistant messages" error
 			if (!hasContent) {
-				console.warn("[GeminiHandler] No content received - yielding fallback response")
 				const fallbackText =
 					"I apologize, but I'm experiencing some technical difficulties at the moment. This might be due to API rate limits or temporary service issues. Please try again in a moment."
-				console.log("[GeminiHandler] Yielding fallback text:", fallbackText)
 				yield {
 					type: "text",
 					text: fallbackText,
 				}
-				console.log("[GeminiHandler] Fallback response yielded successfully")
 			}
 
 			if (pendingGroundingMetadata) {
@@ -447,7 +415,6 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			// Always provide fallback response when errors occur to prevent "no assistant messages" error
 			const fallbackText =
 				"I apologize, but I'm experiencing some technical difficulties at the moment. This might be due to API rate limits or temporary service issues. Please try again in a moment."
-			console.log("[GeminiHandler] Error occurred, yielding fallback response:", fallbackText)
 
 			yield {
 				type: "text",
@@ -461,10 +428,6 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 				outputTokens: 0,
 				totalCost: 0,
 			}
-
-			// Note: We don't rethrow the error since we've provided a fallback response
-			// The user gets a helpful message instead of a hard error
-			console.log("[GeminiHandler] Fallback response provided instead of throwing error")
 		}
 	}
 
@@ -655,8 +618,6 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		if (cacheReadTokens > 0) {
 			trace.cacheRead = { price: cacheReadsPrice, tokens: cacheReadTokens, cost: cacheReadCost }
 		}
-
-		// console.log(`[GeminiHandler] calculateCost -> ${totalCost}`, trace)
 
 		return totalCost
 	}
