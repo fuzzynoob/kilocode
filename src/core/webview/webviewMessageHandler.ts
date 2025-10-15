@@ -797,6 +797,7 @@ export const webviewMessageHandler = async (
 
 			const routerModels: Record<RouterName, ModelRecord> = {
 				openrouter: {},
+				gemini: {}, // kilocode_change
 				"vercel-ai-gateway": {},
 				huggingface: {},
 				litellm: {},
@@ -834,6 +835,16 @@ export const webviewMessageHandler = async (
 					key: "openrouter",
 					options: { provider: "openrouter", apiKey: openRouterApiKey, baseUrl: openRouterBaseUrl },
 				},
+				// kilocode_change start
+				{
+					key: "gemini",
+					options: {
+						provider: "gemini",
+						apiKey: apiConfiguration.geminiApiKey,
+						baseUrl: apiConfiguration.googleGeminiBaseUrl,
+					},
+				},
+				// kilocode_change end
 				{
 					key: "requesty",
 					options: {
@@ -1738,6 +1749,10 @@ export const webviewMessageHandler = async (
 			break
 		case "showTaskTimeline":
 			await updateGlobalState("showTaskTimeline", message.bool ?? false)
+			await provider.postStateToWebview()
+			break
+		case "showTimestamps":
+			await updateGlobalState("showTimestamps", message.bool ?? false)
 			await provider.postStateToWebview()
 			break
 		case "hideCostBelowThreshold":

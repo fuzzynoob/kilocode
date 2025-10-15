@@ -1,17 +1,25 @@
 import type { Anthropic } from "@anthropic-ai/sdk"
 import {
-	FinishReason,
-	type GenerateContentConfig,
-	type GenerateContentParameters,
-	type GenerateContentResponseUsageMetadata,
 	GoogleGenAI,
+	type GenerateContentResponseUsageMetadata,
+	type GenerateContentParameters,
+	type GenerateContentConfig,
 	type GroundingMetadata,
+	FinishReason, // kilocode_change
 } from "@google/genai"
 import type { JWTInput } from "google-auth-library"
 
-import { geminiDefaultModelId, type GeminiModelId, geminiModels, type ModelInfo } from "@roo-code/types"
+import {
+	type ModelInfo,
+	// type GeminiModelId, // kilocode_change
+	geminiDefaultModelId,
+	geminiModels,
+} from "@roo-code/types"
 
-import type { ApiHandlerOptions } from "../../shared/api"
+import type {
+	ApiHandlerOptions,
+	ModelRecord, // kilocode_change
+} from "../../shared/api"
 import { safeJsonParse } from "../../shared/safeJsonParse"
 
 import { convertAnthropicContentToGemini, convertAnthropicMessageToGemini } from "../transform/gemini-format"
@@ -19,10 +27,11 @@ import { t } from "i18next"
 import type { ApiStream, GroundingSource } from "../transform/stream"
 import { getModelParams } from "../transform/model-params"
 
-import type { ApiHandlerCreateMessageMetadata, SingleCompletionHandler } from "../index"
+import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 import { BaseProvider } from "./base-provider"
 import { GeminiKeyManager } from "./gemini-key-manager"
 import { throwMaxCompletionTokensReachedError } from "./kilocode/verifyFinishReason"
+import { getGeminiModels } from "./fetchers/gemini" // kilocode_change
 
 type GeminiHandlerOptions = ApiHandlerOptions & {
 	isVertex?: boolean
@@ -37,11 +46,18 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 	private location: string
 	private _testClient?: GoogleGenAI // For testing purposes
 
+	// kilocode_change start
+	private models: ModelRecord = { ...geminiModels }
+	private modelsLoaded = false
+	private modelsLoading?: Promise<void>
+	private readonly isVertex: boolean
+	// kilocode_change end
+
 	constructor({ isVertex, ...options }: GeminiHandlerOptions) {
 		super()
 
 		this.options = options
-		this.isVertex = isVertex || false
+		this.isVertex = !!isVertex // kilocode_change
 		this.project = this.options.vertexProjectId ?? "not-provided"
 		this.location = this.options.vertexRegion ?? "not-provided"
 
@@ -226,11 +242,45 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		)
 	}
 
+	// kilocode_change start
+	private async ensureModelsLoaded() {
+		if (this.isVertex) {
+			return
+		}
+
+		if (this.modelsLoaded) {
+			return
+		}
+
+		if (!this.modelsLoading) {
+			this.modelsLoading = this.loadModels().finally(() => {
+				this.modelsLoaded = true
+				this.modelsLoading = undefined
+			})
+		}
+
+		await this.modelsLoading
+	}
+
+	private async loadModels() {
+		try {
+			this.models = await getGeminiModels({
+				apiKey: this.options.geminiApiKey,
+				baseUrl: this.options.googleGeminiBaseUrl,
+			})
+		} catch (error) {
+			console.error("[GeminiHandler] Failed to fetch Gemini models", error)
+			this.models = { ...geminiModels }
+		}
+	}
+	// kilocode_change end
+
 	async *createMessage(
 		systemInstruction: string,
 		messages: Anthropic.Messages.MessageParam[],
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): ApiStream {
+		await this.ensureModelsLoaded() // kilocode_change
 		console.log("[GeminiHandler] createMessage called")
 
 		// Shuffle keys at the start of this prompt session
@@ -420,16 +470,25 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 	}
 
 	override getModel() {
-		const modelId = this.options.apiModelId
-		let id = modelId && modelId in geminiModels ? (modelId as GeminiModelId) : geminiDefaultModelId
-		let info: ModelInfo = geminiModels[id]
+		// kilocode_change start: dynamic loading
+		const requestedId = this.options.apiModelId
+		const availableModels = this.models
+		const staticModels = geminiModels as Record<string, ModelInfo>
+
+		const id = requestedId && requestedId in availableModels ? requestedId : geminiDefaultModelId
+
+		const info: ModelInfo =
+			availableModels[id] ??
+			staticModels[id] ??
+			availableModels[geminiDefaultModelId] ??
+			staticModels[geminiDefaultModelId]
+
 		const params = getModelParams({ format: "gemini", modelId: id, model: info, settings: this.options })
 
-		// The `:thinking` suffix indicates that the model is a "Hybrid"
-		// reasoning model and that reasoning is required to be enabled.
-		// The actual model ID honored by Gemini's API does not have this
-		// suffix.
-		return { id: id.endsWith(":thinking") ? id.replace(":thinking", "") : id, info, ...params }
+		const apiModelId = id.endsWith(":thinking") ? id.replace(":thinking", "") : id
+
+		return { id: apiModelId, info, ...params }
+		// kilocode_change end
 	}
 
 	private extractGroundingSources(groundingMetadata?: GroundingMetadata): GroundingSource[] {
@@ -468,6 +527,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 
 	async completePrompt(prompt: string): Promise<string> {
 		try {
+			await this.ensureModelsLoaded() // kilocode_change
 			// Shuffle keys at the start of this prompt session
 			this.keyManager.shuffleKeys()
 			console.log("[GeminiHandler] Keys shuffled for new prompt session")
@@ -519,6 +579,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 
 	override async countTokens(content: Array<Anthropic.Messages.ContentBlockParam>): Promise<number> {
 		try {
+			await this.ensureModelsLoaded() // kilocode_change
 			const { id: model } = this.getModel()
 
 			const response = await this.executeWithRetry(async (client) => {

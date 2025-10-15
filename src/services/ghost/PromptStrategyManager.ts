@@ -3,7 +3,6 @@ import { PromptStrategy } from "./types/PromptStrategy"
 
 // Import all strategies
 import { UserRequestStrategy } from "./strategies/UserRequestStrategy"
-import { CommentDrivenStrategy } from "./strategies/CommentDrivenStrategy"
 import { AutoTriggerStrategy } from "./strategies/AutoTriggerStrategy"
 
 /**
@@ -20,7 +19,7 @@ export class PromptStrategyManager {
 		this.overrideStrategy = options?.overrideStrategy
 
 		// Register all strategies in priority order
-		this.strategies = [new UserRequestStrategy(), new CommentDrivenStrategy()]
+		this.strategies = [new UserRequestStrategy()]
 		this.autoTriggerStrategy = new AutoTriggerStrategy()
 	}
 
@@ -50,9 +49,6 @@ export class PromptStrategyManager {
 		return strategy
 	}
 
-	/**
-	 * Get all available strategy names
-	 */
 	getAvailableStrategies(): string[] {
 		return [...this.strategies.map((s) => s.name), this.autoTriggerStrategy.name]
 	}
@@ -69,8 +65,7 @@ export class PromptStrategyManager {
 	} {
 		const strategy = this.selectStrategy(context)
 
-		const systemPrompt = strategy.getSystemInstructions()
-		const userPrompt = strategy.getUserPrompt(context)
+		const { systemPrompt, userPrompt } = strategy.getPrompts(context)
 
 		if (this.debug) {
 			console.log("[PromptStrategyManager] Prompt built:", {
