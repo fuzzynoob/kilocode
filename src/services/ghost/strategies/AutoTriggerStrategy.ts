@@ -1,29 +1,18 @@
-import { GhostSuggestionContext } from "../types"
-import { PromptStrategy } from "../types/PromptStrategy"
+import { GhostSuggestionContext, extractPrefix } from "../types"
 import { CURSOR_MARKER } from "../ghostConstants"
 import { formatDocumentWithCursor, getBaseSystemInstructions } from "./StrategyHelpers"
 import { isCommentLine, extractComment, cleanComment } from "./CommentHelpers"
 
-export class AutoTriggerStrategy implements PromptStrategy {
-	name = "Auto Trigger"
+export class AutoTriggerStrategy {
+	shouldTreatAsComment(prefix: string, languageId: string): boolean {
+		const lines = prefix.split("\n")
+		const currentLine = lines[lines.length - 1].trim() || ""
+		const previousLine = lines.length > 1 ? lines[lines.length - 2].trim() : ""
 
-	canHandle(context: GhostSuggestionContext): boolean {
-		// This is the fallback strategy, so it can handle anything
-		// But we check for basic requirements
-		return !!context.document
-	}
-
-	shouldTreatAsComment(context: GhostSuggestionContext): boolean {
-		if (!context.document || !context.range) return false
-
-		const currentLine = context.document.lineAt(context.range.start.line).text
-		const previousLine =
-			context.range.start.line > 0 && context.document.lineAt(context.range.start.line - 1).text.trim()
-
-		if (isCommentLine(currentLine, context.document.languageId)) {
+		if (isCommentLine(currentLine, languageId)) {
 			return true
-		} else if (currentLine.trim() === "" && previousLine) {
-			return isCommentLine(previousLine, context.document.languageId)
+		} else if (currentLine === "" && previousLine) {
+			return isCommentLine(previousLine, languageId)
 		} else {
 			return false
 		}
@@ -33,7 +22,10 @@ export class AutoTriggerStrategy implements PromptStrategy {
 		systemPrompt: string
 		userPrompt: string
 	} {
-		if (this.shouldTreatAsComment(context)) {
+		const prefix = extractPrefix(context)
+		const languageId = context.document?.languageId || ""
+
+		if (this.shouldTreatAsComment(prefix, languageId)) {
 			return {
 				systemPrompt: this.getCommentsSystemInstructions(),
 				userPrompt: this.getCommentsUserPrompt(context),

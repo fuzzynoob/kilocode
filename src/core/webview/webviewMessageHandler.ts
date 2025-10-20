@@ -6,7 +6,7 @@ import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 // kilocode_change start
 import axios from "axios"
-import { getKiloBaseUriFromToken } from "../../shared/kilocode/token"
+import { getKiloBaseUriFromToken } from "@roo-code/types"
 import {
 	ProfileData,
 	SeeNewChangesPayload,
@@ -2032,6 +2032,7 @@ export const webviewMessageHandler = async (
 					await provider.providerSettingsManager.saveConfig(message.text, message.apiConfiguration)
 					const listApiConfig = await provider.providerSettingsManager.listConfig()
 					await updateGlobalState("listApiConfigMeta", listApiConfig)
+					vscode.commands.executeCommand("kilo-code.ghost.reload") // kilocode_change: Reload ghost model when API provider settings change
 				} catch (error) {
 					provider.log(
 						`Error save api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
@@ -2057,6 +2058,7 @@ export const webviewMessageHandler = async (
 
 					if (hadPreviousToken && hasNewToken && tokensAreDifferent) {
 						configToSave = { ...message.apiConfiguration, kilocodeOrganizationId: undefined }
+						await updateGlobalState("hasPerformedOrganizationAutoSwitch", undefined)
 					}
 
 					organizationChanged =
@@ -2610,8 +2612,43 @@ export const webviewMessageHandler = async (
 					})
 				}
 
+				try {
+					const shouldAutoSwitch =
+						response.data.organizations &&
+						response.data.organizations.length > 0 &&
+						!apiConfiguration.kilocodeOrganizationId &&
+						!getGlobalState("hasPerformedOrganizationAutoSwitch")
+
+					if (shouldAutoSwitch) {
+						const firstOrg = response.data.organizations![0]
+						provider.log(
+							`[Auto-switch] Performing automatic organization switch to: ${firstOrg.name} (${firstOrg.id})`,
+						)
+
+						const upsertMessage: WebviewMessage = {
+							type: "upsertApiConfiguration",
+							text: currentApiConfigName ?? "default",
+							apiConfiguration: {
+								...apiConfiguration,
+								kilocodeOrganizationId: firstOrg.id,
+							},
+						}
+
+						await webviewMessageHandler(provider, upsertMessage)
+						await updateGlobalState("hasPerformedOrganizationAutoSwitch", true)
+
+						vscode.window.showInformationMessage(`Automatically switched to organization: ${firstOrg.name}`)
+
+						provider.log(`[Auto-switch] Successfully switched to organization: ${firstOrg.name}`)
+					}
+				} catch (error) {
+					provider.log(
+						`[Auto-switch] Error during automatic organization switch: ${error instanceof Error ? error.message : String(error)}`,
+					)
+				}
+
 				provider.postMessageToWebview({
-					type: "profileDataResponse", // Assuming this response type is still appropriate for /api/profile
+					type: "profileDataResponse",
 					payload: { success: true, data: { kilocodeToken, ...response.data } },
 				})
 			} catch (error: any) {

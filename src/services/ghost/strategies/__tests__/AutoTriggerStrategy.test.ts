@@ -10,18 +10,59 @@ describe("AutoTriggerStrategy", () => {
 		strategy = new AutoTriggerStrategy()
 	})
 
-	describe("canHandle", () => {
-		it("should handle any context with a document", () => {
-			const mockDocument = {
-				languageId: "typescript",
-				getText: () => "const x = 1;",
-			} as vscode.TextDocument
+	describe("shouldTreatAsComment", () => {
+		it("should return true when current line is a comment", () => {
+			const prefix = "// TODO: implement"
+			const result = strategy.shouldTreatAsComment(prefix, "typescript")
+			expect(result).toBe(true)
+		})
 
-			const context: GhostSuggestionContext = {
-				document: mockDocument,
-			}
+		it("should return true when current line is empty and previous line is a comment", () => {
+			const prefix = "// TODO: implement\n"
+			const result = strategy.shouldTreatAsComment(prefix, "typescript")
+			expect(result).toBe(true)
+		})
 
-			expect(strategy.canHandle(context)).toBe(true)
+		it("should return false when current line is not a comment", () => {
+			const prefix = "const x = 1;"
+			const result = strategy.shouldTreatAsComment(prefix, "typescript")
+			expect(result).toBe(false)
+		})
+
+		it("should return false when current line is empty and previous line is not a comment", () => {
+			const prefix = "const x = 1;\n"
+			const result = strategy.shouldTreatAsComment(prefix, "typescript")
+			expect(result).toBe(false)
+		})
+
+		it("should return false when prefix is empty", () => {
+			const prefix = ""
+			const result = strategy.shouldTreatAsComment(prefix, "typescript")
+			expect(result).toBe(false)
+		})
+
+		it("should handle Python comments", () => {
+			const prefix = "# TODO: implement"
+			const result = strategy.shouldTreatAsComment(prefix, "python")
+			expect(result).toBe(true)
+		})
+
+		it("should handle block comments", () => {
+			const prefix = "/* TODO: implement */"
+			const result = strategy.shouldTreatAsComment(prefix, "javascript")
+			expect(result).toBe(true)
+		})
+
+		it("should handle multi-line prefix with comment on last line", () => {
+			const prefix = "const x = 1;\nconst y = 2;\n// TODO: implement sum"
+			const result = strategy.shouldTreatAsComment(prefix, "typescript")
+			expect(result).toBe(true)
+		})
+
+		it("should handle multi-line prefix with empty last line after comment", () => {
+			const prefix = "const x = 1;\n// TODO: implement sum\n"
+			const result = strategy.shouldTreatAsComment(prefix, "typescript")
+			expect(result).toBe(true)
 		})
 	})
 
