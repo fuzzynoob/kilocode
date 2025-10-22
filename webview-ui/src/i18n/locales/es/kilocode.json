@@ -97,7 +97,10 @@
 	},
 	"toolCallStyle": {
 		"title": "Estilo de Llamada de Herramientas",
-		"description": "Elige cómo se formatean las llamadas de herramientas en el prompt del sistema. JSON es actualmente experimental y está destinado principalmente a usuarios interesados en contribuir a su desarrollo."
+		"description": "Elige cómo se formatean las llamadas de herramientas en el prompt del sistema. JSON es actualmente experimental y está destinado principalmente a usuarios interesados en contribuir a su desarrollo.",
+		"automatic": "Dejar que Kilo decida",
+		"xml": "XML",
+		"json": "JSON (experimental)"
 	},
 	"chat": {
 		"condense": {
@@ -238,7 +241,7 @@
 		"removeProfile": "Eliminar perfil",
 		"selectProfilePlaceholder": "Seleccionar perfil...",
 		"addProfile": "Añadir perfil",
-		"noProfilesAvailable": "No hay perfiles disponibles. Por favor configure primero al menos un perfil de proveedor no virtual.",
+		"noProfilesAvailable": "No hay perfiles disponibles. Por favor, configure primero al menos un perfil de proveedor no virtual.",
 		"dangerZoneTitle": "Zona de Peligro",
 		"dangerZoneDescription": "Estas acciones son destructivas y no se pueden deshacer.",
 		"clearUsageData": "Limpiar Datos de Uso",

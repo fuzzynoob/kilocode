@@ -104,7 +104,10 @@
 	},
 	"toolCallStyle": {
 		"title": "Style d'Appel d'Outil",
-		"description": "Choisissez comment les appels d'outils sont formatés dans le prompt système. JSON est actuellement expérimental et principalement destiné aux utilisateurs intéressés à contribuer à son développement."
+		"description": "Choisissez comment les appels d'outils sont formatés dans le prompt système. JSON est actuellement expérimental et principalement destiné aux utilisateurs intéressés à contribuer à son développement.",
+		"automatic": "Laisser Kilo décider",
+		"xml": "XML",
+		"json": "JSON (expérimental)"
 	},
 	"chat": {
 		"condense": {
@@ -245,7 +248,7 @@
 		"removeProfile": "Supprimer le profil",
 		"selectProfilePlaceholder": "Sélectionner le profil...",
 		"addProfile": "Ajouter un profil",
-		"noProfilesAvailable": "Aucun profil disponible. Veuillez d'abord configurer au moins un profil de fournisseur non virtuel.",
+		"noProfilesAvailable": "Aucun profil disponible. Veuillez configurer d'abord au moins un profil de fournisseur non virtuel.",
 		"dangerZoneTitle": "Zone de Danger",
 		"dangerZoneDescription": "Ces actions sont destructives et ne peuvent pas être annulées.",
 		"clearUsageData": "Effacer les Données d'Utilisation",
