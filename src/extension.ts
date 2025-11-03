@@ -23,7 +23,6 @@ import { Package } from "./shared/package"
 import { formatLanguage } from "./shared/language"
 import { ContextProxy } from "./core/config/ContextProxy"
 import { ClineProvider } from "./core/webview/ClineProvider"
-import { CreditsStatusBar } from "./core/kilocode/CreditsStatusBar"
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
 import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 import { McpServerManager } from "./services/mcp/McpServerManager"
@@ -46,6 +45,7 @@ import { initializeI18n } from "./i18n"
 import { registerGhostProvider } from "./services/ghost" // kilocode_change
 import { registerMainThreadForwardingLogger } from "./utils/fowardingLogger" // kilocode_change
 import { getKiloCodeWrapperProperties } from "./core/kilocode/wrapper" // kilocode_change
+import { registerAutocompleteProvider } from "./services/autocomplete" // kilocode_change
 
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -238,14 +238,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	// Finish initializing the provider.
 	TelemetryService.instance.setProvider(provider)
 
-	// kilocode_change start
-	// Initialize credits status bar
-	const creditsStatusBar = new CreditsStatusBar(context, provider)
-	await creditsStatusBar.initialize()
-	context.subscriptions.push(creditsStatusBar)
-	provider.setCreditsStatusBar(creditsStatusBar) // Set the credits status bar reference in the provider so it can notify on organization changes
-	// kilocode_change end
-
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(ClineProvider.sideBarId, provider, {
 			webviewOptions: { retainContextWhenHidden: true },
@@ -330,6 +322,8 @@ export async function activate(context: vscode.ExtensionContext) {
 	if (!kiloCodeWrapped) {
 		// Only use autocomplete in VS Code
 		registerGhostProvider(context, provider)
+		// Experimental
+		// registerAutocompleteProvider(context, provider)
 	} else {
 		// Only foward logs in Jetbrains
 		registerMainThreadForwardingLogger(context)

@@ -1,26 +1,26 @@
 ---
-sidebar_label: Billing & Credits
+sidebar_label: Billing & Kilo Credits
 ---
 
-# Billing & Credits
+# Billing & Kilo Credits
 
-Kilo seats uses a transparent, two-part billing system: a monthly subscription per seat, plus pay-as-you-go model credits with zero markup.
+Kilo seats uses a transparent, two-part billing system: a monthly subscription per seat, plus pay-as-you-go Kilo credits with zero markup.
 
 :::note
 
-Kilo Code seats purchases of Teams or Enterprise are separate from model provider credits.
+Kilo Code seats purchases of Teams or Enterprise are separate from Kilo credits.
 
-No credits are included with a Teams or Enterprise purchase.
+No Kilo credits are included with a Teams or Enterprise purchase.
 
 :::
 
 ## Organization Credits
 
-Organization Owners can purchase credits on the [Organization dashboard](https://app.kilocode.ai).
+Organization Owners can purchase Kilo credits on the [Organization dashboard](https://app.kilocode.ai).
 
-Organization credits are purchased on behalf of all users in the organization. Every member of the organization can use credits in the organization's balance with the Kilo Code model provider.
+Organization credits are purchased on behalf of all users in the organization. Every member of the organization can use the credits in the organization's balance with the Kilo Code model provider.
 
-Using organization credits works exactly like spending [individual credits](/basic-usage/adding-tokens), except that the credits come from the organization's credit balance, rather than the individuals.
+Using organization credits works exactly like spending [individual credits](/basic-usage/adding-credits), except that the credits come from the organization's credit balance, rather than the individuals.
 
 ### Buying Organization Credits
 
@@ -65,7 +65,7 @@ To fill empty seats or remove members ahead of seat deletion, see the [team mana
 
 To fill empty seats or remove members ahead of seat deletion, see the [team management](/seats/team-management) page.
 
-## Invoiceas
+## Invoices
 
 Invoices for any payment on the Kilo Code platform, for seats or credits, will be available in the Invoices tab.
 

@@ -54,10 +54,6 @@ export type { UseMessageHandlerReturn } from "./useMessageHandler.js"
 export { useTaskState } from "./useTaskState.js"
 export type { UseTaskStateReturn } from "./useTaskState.js"
 
-// Config hooks
-export { useConfig } from "./useConfig.js"
-export type { UseConfigReturn } from "./useConfig.js"
-
 // Theme hooks
 export { useTheme } from "./useTheme.js"
 
@@ -65,10 +61,11 @@ export { useTheme } from "./useTheme.js"
 export { useApprovalHandler } from "./useApprovalHandler.js"
 export type { UseApprovalHandlerOptions, UseApprovalHandlerReturn } from "./useApprovalHandler.js"
 
-export { useApprovalEffect } from "./useApprovalEffect.js"
+export { useApprovalMonitor } from "./useApprovalMonitor.js"
 
 export { useFollowupSuggestions } from "./useFollowupSuggestions.js"
 export type { UseFollowupSuggestionsReturn } from "./useFollowupSuggestions.js"
 
 export { useFollowupCIResponse } from "./useFollowupCIResponse.js"
+export { useTerminal } from "./useTerminal.js"
 export { useFollowupHandler } from "./useFollowupHandler.js"

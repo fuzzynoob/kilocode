@@ -1,9 +1,9 @@
 import { LLMClient } from "./llm-client.js"
-import { AutoTriggerStrategy } from "../services/ghost/strategies/AutoTriggerStrategy.js"
-import { GhostSuggestionContext, AutocompleteInput } from "../services/ghost/types.js"
+import { AutoTriggerStrategy } from "../services/ghost/classic-auto-complete/AutoTriggerStrategy.js"
+import { GhostSuggestionContext, AutocompleteInput, extractPrefixSuffix } from "../services/ghost/types.js"
 import { MockTextDocument } from "../services/mocking/MockTextDocument.js"
-import { CURSOR_MARKER } from "../services/ghost/ghostConstants.js"
-import { GhostStreamingParser } from "../services/ghost/GhostStreamingParser.js"
+import { CURSOR_MARKER } from "../services/ghost/classic-auto-complete/ghostConstants.js"
+import { parseGhostResponse } from "../services/ghost/classic-auto-complete/GhostStreamingParser.js"
 import * as vscode from "vscode"
 import crypto from "crypto"
 
@@ -86,24 +86,39 @@ export class StrategyTester {
 		return response.content
 	}
 
-	parseCompletion(xmlResponse: string): { search: string; replace: string }[] {
-		const parser = new GhostStreamingParser()
+	parseCompletion(originalContent: string, xmlResponse: string): string | null {
+		try {
+			const cursorIndex = originalContent.indexOf(CURSOR_MARKER)
+			const prefix = originalContent.substring(0, cursorIndex)
+			const suffix = originalContent.substring(cursorIndex + CURSOR_MARKER.length)
 
-		const dummyContext: GhostSuggestionContext = {
-			document: new MockTextDocument(vscode.Uri.parse("file:///test.js"), "") as any,
-			range: new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0)) as any,
+			const result = parseGhostResponse(xmlResponse, prefix, suffix)
+
+			// Check if we have any suggestions
+			if (!result.suggestions.hasSuggestions()) {
+				console.warn("No suggestions found")
+				return null
+			}
+
+			// Get the FIM suggestion
+			const fimSuggestion = result.suggestions.getFillInAtCursor()
+			if (!fimSuggestion) {
+				console.warn("No FIM suggestion found")
+				return null
+			}
+
+			// Reconstruct the complete content with the FIM text inserted
+			return fimSuggestion.prefix + fimSuggestion.text + fimSuggestion.suffix
+		} catch (error) {
+			console.warn("Failed to parse completion:", error)
+			return null
 		}
-
-		parser.initialize(dummyContext)
-		parser.parseResponse(xmlResponse)
-
-		return parser.getCompletedChanges()
 	}
 
 	/**
 	 * Get the type of the strategy (always auto-trigger now)
 	 */
-	getSelectedStrategyName(code: string): string {
+	getSelectedStrategyName(): string {
 		return "auto-trigger"
 	}
 }
