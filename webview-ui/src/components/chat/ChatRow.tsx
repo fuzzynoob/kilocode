@@ -69,6 +69,7 @@ import {
 	MessageCircle,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { formatFileSize } from "@/lib/formatting-utils" // kilocode_change
 import { SeeNewChangesButtons } from "./kilocode/SeeNewChangesButtons"
 import ChatTimestamps from "./ChatTimestamps" // kilocode_change
 
@@ -87,6 +88,7 @@ interface ChatRowProps {
 	onFollowUpUnmount?: () => void
 	isFollowUpAnswered?: boolean
 	editable?: boolean
+	hasCheckpoint?: boolean
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -494,39 +496,6 @@ export const ChatRowContent = ({
 						</div>
 					</>
 				)
-			case "searchAndReplace":
-				return (
-					<>
-						<div style={headerStyle}>
-							{tool.isProtected ? (
-								<span
-									className="codicon codicon-lock"
-									style={{ color: "var(--vscode-editorWarning-foreground)", marginBottom: "-1.5px" }}
-								/>
-							) : (
-								toolIcon("replace")
-							)}
-							<span style={{ fontWeight: "bold" }}>
-								{tool.isProtected && message.type === "ask"
-									? t("chat:fileOperations.wantsToEditProtected")
-									: message.type === "ask"
-										? t("chat:fileOperations.wantsToSearchReplace")
-										: t("chat:fileOperations.didSearchReplace")}
-							</span>
-						</div>
-						<div className="pl-6">
-							<CodeAccordian
-								path={tool.path}
-								code={tool.diff}
-								language="diff"
-								progressStatus={message.progressStatus}
-								isLoading={message.partial}
-								isExpanded={isExpanded}
-								onToggleExpand={handleToggleExpand}
-							/>
-						</div>
-					</>
-				)
 			case "codebaseSearch": {
 				return (
 					<div style={headerStyle}>
@@ -600,6 +569,53 @@ export const ChatRowContent = ({
 						</div>
 					</>
 				)
+			// kilocode_change start
+			case "deleteFile":
+				return (
+					<>
+						<div style={headerStyle}>
+							<Trash2 className="w-4 shrink-0" aria-label="Delete icon" />
+							<span style={{ fontWeight: "bold" }}>
+								{tool.stats
+									? t("chat:fileOperations.wantsToDeleteDirectory")
+									: t("chat:fileOperations.wantsToDelete")}
+							</span>
+						</div>
+						<div className="pl-6">
+							<ToolUseBlock>
+								<ToolUseBlockHeader className="group">
+									{tool.path?.startsWith(".") && <span>.</span>}
+									<span className="whitespace-nowrap overflow-hidden text-ellipsis text-left mr-2 rtl">
+										{removeLeadingNonAlphanumeric(tool.path ?? "") + "\u200E"}
+									</span>
+								</ToolUseBlockHeader>
+								{tool.stats && tool.stats.isComplete === true && (
+									<div
+										className="py-1.5 text-xs text-vscode-descriptionForeground"
+										style={{
+											borderTop: "1px solid var(--vscode-editorGroup-border)",
+										}}>
+										<div className="flex items-center gap-3 flex-wrap">
+											<span className="flex items-center gap-1">
+												<span>📁</span>
+												<span>{tool.stats.directories}</span>
+											</span>
+											<span className="flex items-center gap-1">
+												<span>📄</span>
+												<span>{tool.stats.files}</span>
+											</span>
+											<span className="flex items-center gap-1">
+												<span>💾</span>
+												<span>{formatFileSize(tool.stats.size)}</span>
+											</span>
+										</div>
+									</div>
+								)}
+							</ToolUseBlock>
+						</div>
+					</>
+				)
+			// kilocode_change end
 			case "readFile":
 				// Check if this is a batch file permission request
 				const isBatchRequest = message.type === "ask" && tool.batchFiles && Array.isArray(tool.batchFiles)

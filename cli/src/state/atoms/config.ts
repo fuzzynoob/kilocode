@@ -1,5 +1,5 @@
 import { atom } from "jotai"
-import type { CLIConfig, ProviderConfig } from "../../config/types.js"
+import type { AutoApprovalConfig, CLIConfig, ProviderConfig } from "../../config/types.js"
 import { DEFAULT_CONFIG } from "../../config/defaults.js"
 import { loadConfig, saveConfig } from "../../config/persistence.js"
 import { mapConfigToExtensionState } from "../../config/mapper.js"
@@ -8,6 +8,7 @@ import { addCustomTheme, removeCustomTheme, updateCustomTheme } from "../../cons
 import type { Theme } from "../../types/theme.js"
 import { logs } from "../../services/logs.js"
 import { getTelemetryService } from "../../services/telemetry/index.js"
+import { applyEnvOverrides } from "../../config/env-config.js"
 
 // Core config atom - holds the current configuration
 export const configAtom = atom<CLIConfig>(DEFAULT_CONFIG)
@@ -55,7 +56,11 @@ export const loadConfigAtom = atom(null, async (get, set, mode?: string) => {
 		set(configValidationAtom, result.validation)
 
 		// Override mode if provided (e.g., from CLI options)
-		const finalConfig = mode ? { ...result.config, mode } : result.config
+		let finalConfig = mode ? { ...result.config, mode } : result.config
+
+		// Apply environment variable overrides
+		finalConfig = applyEnvOverrides(finalConfig)
+
 		set(configAtom, finalConfig)
 
 		if (result.validation.valid) {
@@ -120,11 +125,17 @@ export const selectProviderAtom = atom(null, async (get, set, providerId: string
 	set(configAtom, updatedConfig)
 	await set(saveConfigAtom, updatedConfig)
 
+	// Import from config-sync to avoid circular dependency
+	const { syncConfigToExtensionEffectAtom } = await import("./config-sync.js")
+
+	// Trigger sync to extension after provider update
+	await set(syncConfigToExtensionEffectAtom)
+
 	// Track provider change
 	getTelemetryService().trackProviderChanged(
 		previousProvider,
 		providerId,
-		provider.apiModelId || provider.kilocodeModel,
+		(provider.apiModelId as string | undefined) || (provider.kilocodeModel as string | undefined),
 	)
 })
 
@@ -466,7 +477,7 @@ export const updateAutoApprovalAtom = atom(
  */
 export const updateAutoApprovalSettingAtom = atom(
 	null,
-	async (get, set, category: keyof import("../../config/types.js").AutoApprovalConfig, updates: any) => {
+	async (get, set, category: keyof AutoApprovalConfig, updates: Record<string, unknown>) => {
 		const config = get(configAtom)
 
 		const updatedConfig = {
@@ -474,7 +485,7 @@ export const updateAutoApprovalSettingAtom = atom(
 			autoApproval: {
 				...config.autoApproval,
 				[category]: {
-					...(config.autoApproval?.[category] as any),
+					...(config.autoApproval?.[category] as Record<string, unknown>),
 					...updates,
 				},
 			},

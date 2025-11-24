@@ -1,15 +1,17 @@
 import * as vscode from "vscode"
-import { FillInAtCursorSuggestion } from "./GhostSuggestions"
 import { extractPrefixSuffix, GhostSuggestionContext, contextToAutocompleteInput } from "../types"
-import { parseGhostResponse } from "./GhostStreamingParser"
-import { AutoTriggerStrategy } from "./AutoTriggerStrategy"
+import { GhostContextProvider } from "./GhostContextProvider"
+import { HoleFiller, FillInAtCursorSuggestion, HoleFillerGhostPrompt } from "./HoleFiller"
+import { FimPromptBuilder, FimGhostPrompt } from "./FillInTheMiddle"
 import { GhostModel } from "../GhostModel"
-import { GhostContext } from "../GhostContext"
-import { ApiStreamChunk } from "../../../api/transform/stream"
+import { RecentlyVisitedRangesService } from "../../continuedev/core/vscode-test-harness/src/autocomplete/RecentlyVisitedRangesService"
+import { RecentlyEditedTracker } from "../../continuedev/core/vscode-test-harness/src/autocomplete/recentlyEdited"
 import type { GhostServiceSettings } from "@roo-code/types"
-import { refuseUselessSuggestion } from "./uselessSuggestionFilter"
+import { postprocessGhostSuggestion } from "./uselessSuggestionFilter"
+import { RooIgnoreController } from "../../../core/ignore/RooIgnoreController"
 
 const MAX_SUGGESTIONS_HISTORY = 20
+const DEBOUNCE_DELAY_MS = 300
 
 export type CostTrackingCallback = (
 	cost: number,
@@ -18,6 +20,8 @@ export type CostTrackingCallback = (
 	cacheWriteTokens: number,
 	cacheReadTokens: number,
 ) => void
+
+export type GhostPrompt = FimGhostPrompt | HoleFillerGhostPrompt
 
 /**
  * Find a matching suggestion from the history based on current prefix and suffix
@@ -61,6 +65,18 @@ export function findMatchingSuggestion(
 	return null
 }
 
+export function stringToInlineCompletions(text: string, position: vscode.Position): vscode.InlineCompletionItem[] {
+	if (text === "") {
+		return []
+	}
+
+	const item: vscode.InlineCompletionItem = {
+		insertText: text,
+		range: new vscode.Range(position, position),
+	}
+	return [item]
+}
+
 export interface LLMRetrievalResult {
 	suggestion: FillInAtCursorSuggestion
 	cost: number
@@ -72,24 +88,34 @@ export interface LLMRetrievalResult {
 
 export class GhostInlineCompletionProvider implements vscode.InlineCompletionItemProvider {
 	private suggestionsHistory: FillInAtCursorSuggestion[] = []
-	private autoTriggerStrategy: AutoTriggerStrategy
-	private isRequestCancelled: boolean = false
+	private holeFiller: HoleFiller
+	private fimPromptBuilder: FimPromptBuilder
 	private model: GhostModel
 	private costTrackingCallback: CostTrackingCallback
-	private ghostContext: GhostContext
 	private getSettings: () => GhostServiceSettings | null
+	private recentlyVisitedRangesService: RecentlyVisitedRangesService
+	private recentlyEditedTracker: RecentlyEditedTracker
+	private debounceTimer: NodeJS.Timeout | null = null
+	private ignoreController?: Promise<RooIgnoreController>
 
 	constructor(
 		model: GhostModel,
 		costTrackingCallback: CostTrackingCallback,
-		ghostContext: GhostContext,
 		getSettings: () => GhostServiceSettings | null,
+		contextProvider: GhostContextProvider,
+		ignoreController?: Promise<RooIgnoreController>,
 	) {
 		this.model = model
 		this.costTrackingCallback = costTrackingCallback
-		this.ghostContext = ghostContext
 		this.getSettings = getSettings
-		this.autoTriggerStrategy = new AutoTriggerStrategy()
+		this.holeFiller = new HoleFiller(contextProvider)
+		this.fimPromptBuilder = new FimPromptBuilder(contextProvider)
+		this.ignoreController = ignoreController
+
+		// Initialize tracking services with IDE from context provider
+		const ide = contextProvider.getIde()
+		this.recentlyVisitedRangesService = new RecentlyVisitedRangesService(ide)
+		this.recentlyEditedTracker = new RecentlyEditedTracker(ide)
 	}
 
 	public updateSuggestions(fillInAtCursor: FillInAtCursorSuggestion): void {
@@ -113,108 +139,65 @@ export class GhostInlineCompletionProvider implements vscode.InlineCompletionIte
 		}
 	}
 
-	/**
-	 * Retrieve suggestions from LLM
-	 * @param context - The suggestion context
-	 * @param model - The Ghost model to use for generation
-	 * @returns LLM retrieval result with suggestions and usage info
-	 */
-	public async getFromLLM(context: GhostSuggestionContext, model: GhostModel): Promise<LLMRetrievalResult> {
-		this.isRequestCancelled = false
+	private async getPrompt(
+		document: vscode.TextDocument,
+		position: vscode.Position,
+	): Promise<{ prompt: GhostPrompt; prefix: string; suffix: string }> {
+		// Build complete context with all tracking data
+		const recentlyVisitedRanges = this.recentlyVisitedRangesService.getSnippets()
+		const recentlyEditedRanges = await this.recentlyEditedTracker.getRecentlyEditedRanges()
+
+		const context: GhostSuggestionContext = {
+			document,
+			range: new vscode.Range(position, position),
+			recentlyVisitedRanges,
+			recentlyEditedRanges,
+		}
 
 		const autocompleteInput = contextToAutocompleteInput(context)
 
-		const position = context.range?.start ?? context.document.positionAt(0)
-		const { prefix, suffix } = extractPrefixSuffix(context.document, position)
-		const languageId = context.document.languageId
+		const { prefix, suffix } = extractPrefixSuffix(document, position)
+		const languageId = document.languageId
 
-		// Check cache before making API call (includes both successful and failed lookups)
-		const cachedResult = findMatchingSuggestion(prefix, suffix, this.suggestionsHistory)
-		if (cachedResult !== null) {
-			// Return cached result (either success with text or failure with empty string)
-			return {
-				suggestion: { text: cachedResult, prefix, suffix },
-				cost: 0,
-				inputTokens: 0,
-				outputTokens: 0,
-				cacheWriteTokens: 0,
-				cacheReadTokens: 0,
-			}
-		}
+		// Determine strategy based on model capabilities and call only the appropriate prompt builder
+		const prompt = this.model.supportsFim()
+			? await this.fimPromptBuilder.getFimPrompts(autocompleteInput, this.model.getModelName() ?? "codestral")
+			: await this.holeFiller.getPrompts(autocompleteInput, languageId)
 
-		const { systemPrompt, userPrompt } = this.autoTriggerStrategy.getPrompts(
-			autocompleteInput,
-			prefix,
-			suffix,
-			languageId,
-		)
-
-		if (this.isRequestCancelled) {
-			return {
-				suggestion: { text: "", prefix, suffix },
-				cost: 0,
-				inputTokens: 0,
-				outputTokens: 0,
-				cacheWriteTokens: 0,
-				cacheReadTokens: 0,
-			}
-		}
-
-		let response = ""
-
-		// Create streaming callback
-		const onChunk = (chunk: ApiStreamChunk) => {
-			if (this.isRequestCancelled) {
-				return
-			}
-
-			if (chunk.type === "text") {
-				response += chunk.text
-			}
-		}
-
-		// Start streaming generation
-		const usageInfo = await model.generateResponse(systemPrompt, userPrompt, onChunk)
-
-		console.log("response", response)
-
-		if (this.isRequestCancelled) {
-			return {
-				suggestion: { text: "", prefix, suffix },
-				cost: usageInfo.cost,
-				inputTokens: usageInfo.inputTokens,
-				outputTokens: usageInfo.outputTokens,
-				cacheWriteTokens: usageInfo.cacheWriteTokens,
-				cacheReadTokens: usageInfo.cacheReadTokens,
-			}
-		}
-
-		// Parse the response using the standalone function
-		let fillInAtCursorSuggestion = parseGhostResponse(response, prefix, suffix)
-
-		// Check if the suggestion is useless and clear it if so
-		if (fillInAtCursorSuggestion.text && refuseUselessSuggestion(fillInAtCursorSuggestion.text, prefix, suffix)) {
-			fillInAtCursorSuggestion = { text: "", prefix, suffix }
-		} else if (fillInAtCursorSuggestion.text) {
-			console.info("Final suggestion:", fillInAtCursorSuggestion)
-		}
-
-		// Always return a FillInAtCursorSuggestion, even if text is empty
-		return {
-			suggestion: fillInAtCursorSuggestion,
-			cost: usageInfo.cost,
-			inputTokens: usageInfo.inputTokens,
-			outputTokens: usageInfo.outputTokens,
-			cacheWriteTokens: usageInfo.cacheWriteTokens,
-			cacheReadTokens: usageInfo.cacheReadTokens,
-		}
+		return { prompt, prefix, suffix }
 	}
 
-	/**
-	 * Cancel any ongoing LLM request
-	 */
-	public cancelRequest(): void {
-		this.isRequestCancelled = true
+	private processSuggestion(
+		suggestionText: string,
+		prefix: string,
+		suffix: string,
+		model: GhostModel,
+	): FillInAtCursorSuggestion {
+		if (!suggestionText) {
+			return { text: "", prefix, suffix }
+		}
+
+		const processedText = postprocessGhostSuggestion({
+			suggestion: suggestionText,
+			prefix,
+			suffix,
+			model: model.getModelName() || "",
+		})
+
+		if (processedText) {
+			return { text: processedText, prefix, suffix }
+		}
+
+		return { text: "", prefix, suffix }
+	}
+
+	public dispose(): void {
+		if (this.debounceTimer !== null) {
+			clearTimeout(this.debounceTimer)
+			this.debounceTimer = null
+		}
+		this.recentlyVisitedRangesService.dispose()
+		this.recentlyEditedTracker.dispose()
 	}
 
 	public async provideInlineCompletionItems(
@@ -239,62 +222,101 @@ export class GhostInlineCompletionProvider implements vscode.InlineCompletionIte
 		_context: vscode.InlineCompletionContext,
 		_token: vscode.CancellationToken,
 	): Promise<vscode.InlineCompletionItem[] | vscode.InlineCompletionList> {
-		const { prefix, suffix } = extractPrefixSuffix(document, position)
-
-		const matchingText = findMatchingSuggestion(prefix, suffix, this.suggestionsHistory)
-
-		if (matchingText !== null) {
-			if (matchingText === "") {
-				return []
-			}
-
-			const item: vscode.InlineCompletionItem = {
-				insertText: matchingText,
-				range: new vscode.Range(position, position),
-			}
-			return [item]
+		if (!this.model) {
+			// bail if no model is available, because if there is none, we also have no cache
+			return []
 		}
 
-		// No cached suggestion available - invoke LLM
-		if (this.model && this.ghostContext) {
-			const context: GhostSuggestionContext = {
-				document,
-				range: new vscode.Range(position, position),
-			}
+		if (!document?.uri?.fsPath) {
+			return []
+		}
 
-			const fullContext = await this.ghostContext.generate(context)
-			try {
-				const result = await this.getFromLLM(fullContext, this.model)
+		try {
+			// Check if file is ignored (for manual trigger via codeSuggestion)
+			// Skip ignore check for untitled documents
+			if (this.ignoreController && !document.isUntitled) {
+				try {
+					// Try to get the controller with a short timeout
+					const controller = await Promise.race([
+						this.ignoreController,
+						new Promise<null>((resolve) => setTimeout(() => resolve(null), 50)),
+					])
 
-				if (this.costTrackingCallback && result.cost > 0) {
-					this.costTrackingCallback(
-						result.cost,
-						result.inputTokens,
-						result.outputTokens,
-						result.cacheWriteTokens,
-						result.cacheReadTokens,
-					)
-				}
-
-				// Always update suggestions, even if text is empty (for caching)
-				this.updateSuggestions(result.suggestion)
-
-				if (result.suggestion.text) {
-					const item: vscode.InlineCompletionItem = {
-						insertText: result.suggestion.text,
-						range: new vscode.Range(position, position),
+					if (!controller) {
+						// If promise hasn't resolved yet, assume file is ignored
+						return []
 					}
-					return [item]
-				} else {
-					// Empty text means no suggestion to show
+
+					const isAccessible = controller.validateAccess(document.fileName)
+					if (!isAccessible) {
+						return []
+					}
+				} catch (error) {
+					console.error("[GhostInlineCompletionProvider] Error checking file access:", error)
+					// On error, assume file is ignored
 					return []
 				}
-			} catch (error) {
-				console.error("Error getting inline completion from LLM:", error)
-				return []
 			}
+
+			const { prefix, suffix } = extractPrefixSuffix(document, position)
+
+			const matchingText = findMatchingSuggestion(prefix, suffix, this.suggestionsHistory)
+
+			if (matchingText !== null) {
+				return stringToInlineCompletions(matchingText, position)
+			}
+
+			const { prompt, prefix: promptPrefix, suffix: promptSuffix } = await this.getPrompt(document, position)
+			await this.debouncedFetchAndCacheSuggestion(prompt, promptPrefix, promptSuffix)
+
+			const cachedText = findMatchingSuggestion(prefix, suffix, this.suggestionsHistory)
+			return stringToInlineCompletions(cachedText ?? "", position)
+		} catch (error) {
+			// only big catch at the top of the call-chain, if anything goes wrong at a lower level
+			// do not catch, just let the error cascade
+			console.error("[GhostInlineCompletionProvider] Error providing inline completion:", error)
+			return []
+		}
+	}
+
+	private debouncedFetchAndCacheSuggestion(prompt: GhostPrompt, prefix: string, suffix: string): Promise<void> {
+		if (this.debounceTimer !== null) {
+			clearTimeout(this.debounceTimer)
 		}
 
-		return []
+		return new Promise<void>((resolve) => {
+			this.debounceTimer = setTimeout(async () => {
+				this.debounceTimer = null
+				await this.fetchAndCacheSuggestion(prompt, prefix, suffix)
+				resolve()
+			}, DEBOUNCE_DELAY_MS)
+		})
+	}
+
+	private async fetchAndCacheSuggestion(prompt: GhostPrompt, prefix: string, suffix: string): Promise<void> {
+		try {
+			// Curry processSuggestion with prefix, suffix, and model - only text needs to be provided
+			const curriedProcessSuggestion = (text: string) => this.processSuggestion(text, prefix, suffix, this.model)
+
+			const result =
+				prompt.strategy === "fim"
+					? await this.fimPromptBuilder.getFromFIM(this.model, prompt, curriedProcessSuggestion)
+					: await this.holeFiller.getFromChat(this.model, prompt, curriedProcessSuggestion)
+
+			if (this.costTrackingCallback && result.cost > 0) {
+				this.costTrackingCallback(
+					result.cost,
+					result.inputTokens,
+					result.outputTokens,
+					result.cacheWriteTokens,
+					result.cacheReadTokens,
+				)
+			}
+
+			// Always update suggestions, even if text is empty (for caching)
+			this.updateSuggestions(result.suggestion)
+		} catch (error) {
+			console.error("Error getting inline completion from LLM:", error)
+		}
 	}
 }

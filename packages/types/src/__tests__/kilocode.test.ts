@@ -1,9 +1,8 @@
 // npx vitest run src/__tests__/kilocode.test.ts
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { describe, it, expect, vi, afterEach } from "vitest"
 import {
 	ghostServiceSettingsSchema,
-	checkKilocodeBalance,
 	getAppUrl,
 	getKiloUrlFromToken,
 	getExtensionConfigUrl,
@@ -33,118 +32,6 @@ describe("ghostServiceSettingsSchema", () => {
 			enableAutoTrigger: true,
 		})
 		expect(result.success).toBe(true)
-	})
-})
-
-describe("checkKilocodeBalance", () => {
-	const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbnYiOiJwcm9kdWN0aW9uIn0.test"
-	const mockOrgId = "org-123"
-
-	beforeEach(() => {
-		global.fetch = vi.fn()
-	})
-
-	afterEach(() => {
-		vi.restoreAllMocks()
-	})
-
-	it("should return true when balance is positive", async () => {
-		vi.mocked(global.fetch).mockResolvedValueOnce({
-			ok: true,
-			json: async () => ({ balance: 100 }),
-		} as Response)
-
-		const result = await checkKilocodeBalance(mockToken)
-		expect(result).toBe(true)
-		expect(global.fetch).toHaveBeenCalledWith(
-			"https://api.kilocode.ai/api/profile/balance",
-			expect.objectContaining({
-				headers: expect.objectContaining({
-					Authorization: `Bearer ${mockToken}`,
-				}),
-			}),
-		)
-	})
-
-	it("should return false when balance is zero", async () => {
-		vi.mocked(global.fetch).mockResolvedValueOnce({
-			ok: true,
-			json: async () => ({ balance: 0 }),
-		} as Response)
-
-		const result = await checkKilocodeBalance(mockToken)
-		expect(result).toBe(false)
-	})
-
-	it("should return false when balance is negative", async () => {
-		vi.mocked(global.fetch).mockResolvedValueOnce({
-			ok: true,
-			json: async () => ({ balance: -10 }),
-		} as Response)
-
-		const result = await checkKilocodeBalance(mockToken)
-		expect(result).toBe(false)
-	})
-
-	it("should include organization ID in headers when provided", async () => {
-		vi.mocked(global.fetch).mockResolvedValueOnce({
-			ok: true,
-			json: async () => ({ balance: 100 }),
-		} as Response)
-
-		const result = await checkKilocodeBalance(mockToken, mockOrgId)
-		expect(result).toBe(true)
-		expect(global.fetch).toHaveBeenCalledWith(
-			"https://api.kilocode.ai/api/profile/balance",
-			expect.objectContaining({
-				headers: expect.objectContaining({
-					Authorization: `Bearer ${mockToken}`,
-					"X-KiloCode-OrganizationId": mockOrgId,
-				}),
-			}),
-		)
-	})
-
-	it("should not include organization ID in headers when not provided", async () => {
-		vi.mocked(global.fetch).mockResolvedValueOnce({
-			ok: true,
-			json: async () => ({ balance: 100 }),
-		} as Response)
-
-		await checkKilocodeBalance(mockToken)
-
-		const fetchCall = vi.mocked(global.fetch).mock.calls[0]
-		expect(fetchCall).toBeDefined()
-		const headers = (fetchCall![1] as RequestInit)?.headers as Record<string, string>
-
-		expect(headers).toHaveProperty("Authorization")
-		expect(headers).not.toHaveProperty("X-KiloCode-OrganizationId")
-	})
-
-	it("should return false when API request fails", async () => {
-		vi.mocked(global.fetch).mockResolvedValueOnce({
-			ok: false,
-		} as Response)
-
-		const result = await checkKilocodeBalance(mockToken)
-		expect(result).toBe(false)
-	})
-
-	it("should return false when fetch throws an error", async () => {
-		vi.mocked(global.fetch).mockRejectedValueOnce(new Error("Network error"))
-
-		const result = await checkKilocodeBalance(mockToken)
-		expect(result).toBe(false)
-	})
-
-	it("should handle missing balance field in response", async () => {
-		vi.mocked(global.fetch).mockResolvedValueOnce({
-			ok: true,
-			json: async () => ({}),
-		} as Response)
-
-		const result = await checkKilocodeBalance(mockToken)
-		expect(result).toBe(false)
 	})
 })
 
@@ -183,7 +70,7 @@ describe("URL functions", () => {
 
 	describe("getAppUrl", () => {
 		it("should handle production URLs correctly", () => {
-			expect(getAppUrl()).toBe("https://kilocode.ai")
+			expect(getAppUrl()).toBe("https://kilocode.ai/")
 			expect(getAppUrl("/profile")).toBe("https://kilocode.ai/profile")
 			expect(getAppUrl("/support")).toBe("https://kilocode.ai/support")
 			expect(getAppUrl("/sign-in-to-editor")).toBe("https://kilocode.ai/sign-in-to-editor")
@@ -195,7 +82,7 @@ describe("URL functions", () => {
 		it("should handle development environment", () => {
 			process.env.KILOCODE_BACKEND_BASE_URL = "http://localhost:3000"
 
-			expect(getAppUrl()).toBe("http://localhost:3000")
+			expect(getAppUrl()).toBe("http://localhost:3000/")
 			expect(getAppUrl("/profile")).toBe("http://localhost:3000/profile")
 			expect(getAppUrl("/support")).toBe("http://localhost:3000/support")
 		})
@@ -206,8 +93,8 @@ describe("URL functions", () => {
 		})
 
 		it("should handle empty and root paths", () => {
-			expect(getAppUrl("")).toBe("https://kilocode.ai")
-			expect(getAppUrl("/")).toBe("https://kilocode.ai")
+			expect(getAppUrl("")).toBe("https://kilocode.ai/")
+			expect(getAppUrl("/")).toBe("https://kilocode.ai/")
 		})
 	})
 
@@ -310,7 +197,7 @@ describe("URL functions", () => {
 		it("should handle custom backend URLs", () => {
 			process.env.KILOCODE_BACKEND_BASE_URL = "https://staging.example.com"
 
-			expect(getAppUrl()).toBe("https://staging.example.com")
+			expect(getAppUrl()).toBe("https://staging.example.com/")
 			expect(getAppUrl("/api/test")).toBe("https://staging.example.com/api/test")
 			expect(getAppUrl("/dashboard")).toBe("https://staging.example.com/dashboard")
 		})

@@ -67,11 +67,10 @@ export const toolParamNames = [
 	"code_edit",
 	"files",
 	// kilocode_change end
+	"query",
 	"args",
 	"start_line",
 	"end_line",
-	"query",
-	"args",
 	"todos",
 	"prompt",
 	"image",
@@ -108,6 +107,13 @@ export interface WriteToFileToolUse extends ToolUse {
 	name: "write_to_file"
 	params: Partial<Pick<Record<ToolParamName, string>, "path" | "content" | "line_count">>
 }
+
+// kilocode_change start
+export interface DeleteFileToolUse extends ToolUse {
+	name: "delete_file"
+	params: Partial<Pick<Record<ToolParamName, string>, "path">>
+}
+// kilocode_change end
 
 export interface InsertCodeBlockToolUse extends ToolUse {
 	name: "insert_content"
@@ -179,12 +185,6 @@ export interface RunSlashCommandToolUse extends ToolUse {
 	params: Partial<Pick<Record<ToolParamName, string>, "command" | "args">>
 }
 
-export interface SearchAndReplaceToolUse extends ToolUse {
-	name: "search_and_replace"
-	params: Required<Pick<Record<ToolParamName, string>, "path" | "search" | "replace">> &
-		Partial<Pick<Record<ToolParamName, string>, "use_regex" | "ignore_case" | "start_line" | "end_line">>
-}
-
 // kilocode_change start: Morph fast apply
 export interface EditFileToolUse extends ToolUse {
 	name: "edit_file"
@@ -210,6 +210,7 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	write_to_file: "write files",
 	apply_diff: "apply changes",
 	edit_file: "edit file", // kilocode_change: Morph fast apply
+	delete_file: "delete files", // kilocode_change
 	search_files: "search files",
 	list_files: "list files",
 	list_code_definition_names: "list definitions",
@@ -221,7 +222,6 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	switch_mode: "switch modes",
 	new_task: "create new task",
 	insert_content: "insert content",
-	search_and_replace: "search and replace",
 	new_rule: "create new rule",
 	report_bug: "report bug", // kilocode_change
 	condense: "condense the current context window", // kilocode_change
@@ -248,8 +248,8 @@ export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
 			"apply_diff",
 			"edit_file", // kilocode_change: Morph fast apply
 			"write_to_file",
+			"delete_file", // kilocode_change
 			"insert_content",
-			"search_and_replace",
 			"new_rule", // kilocode_change
 			"generate_image",
 		],

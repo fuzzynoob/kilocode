@@ -33,6 +33,9 @@ import {
 	// kilocode_change start
 	VirtualQuotaFallbackHandler,
 	GeminiCliHandler,
+	SyntheticHandler,
+	OVHcloudAIEndpointsHandler,
+	MiniMaxAnthropicHandler,
 	// kilocode_change end
 	ClaudeCodeHandler,
 	QwenCodeHandler,
@@ -41,12 +44,11 @@ import {
 	DoubaoHandler,
 	ZAiHandler,
 	FireworksHandler,
-	SyntheticHandler, // kilocode_change
 	RooHandler,
 	FeatherlessHandler,
 	VercelAiGatewayHandler,
 	DeepInfraHandler,
-	OVHcloudAIEndpointsHandler, // kilocode_change
+	// MiniMaxHandler, // kilocode_change
 } from "./providers"
 // kilocode_change start
 import { KilocodeOpenrouterHandler } from "./providers/kilocode-openrouter"
@@ -119,8 +121,6 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 	switch (apiProvider) {
 		// kilocode_change start
 		case "kilocode":
-			return new KilocodeOpenrouterHandler(options)
-		case "kilocode-openrouter": // temp typing fix
 			return new KilocodeOpenrouterHandler(options)
 		case "gemini-cli":
 			return new GeminiCliHandler(options)
@@ -209,6 +209,8 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 			return new FeatherlessHandler(options)
 		case "vercel-ai-gateway":
 			return new VercelAiGatewayHandler(options)
+		case "minimax":
+			return new MiniMaxAnthropicHandler(options) // kilocode_change: anthropic
 		default:
 			apiProvider satisfies "gemini-cli" | undefined
 			return new AnthropicHandler(options)

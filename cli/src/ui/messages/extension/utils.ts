@@ -5,7 +5,7 @@ import type { ToolData, McpServerData, FollowUpData, ApiReqInfo, ImageData } fro
 /**
  * Parse JSON from message text safely
  */
-export function parseMessageJson<T = any>(text?: string): T | null {
+export function parseMessageJson<T = unknown>(text?: string): T | null {
 	if (!text) return null
 	try {
 		return JSON.parse(text) as T
@@ -273,7 +273,7 @@ export interface FormattedContent {
 export function formatContentWithMetadata(
 	text: string,
 	maxLines: number = 20,
-	previewLines: number = 5
+	previewLines: number = 5,
 ): FormattedContent {
 	if (!text) {
 		return {

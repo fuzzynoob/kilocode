@@ -13,6 +13,7 @@ import type {
 	ArgumentDefinition,
 	InputState,
 	ArgumentProvider,
+	ArgumentProviderCommandContext,
 } from "../commands/core/types.js"
 
 // ============================================================================
@@ -443,7 +444,7 @@ function createProviderContext(
 	currentArgs: string[],
 	argumentIndex: number,
 	partialInput: string,
-	commandContext?: any,
+	commandContext?: ArgumentProviderCommandContext,
 ): ArgumentProviderContext {
 	const argumentDef = command.arguments?.[argumentIndex]
 
@@ -481,6 +482,7 @@ function createProviderContext(
 			updateProviderModel: commandContext.updateProviderModel,
 			refreshRouterModels: commandContext.refreshRouterModels,
 			taskHistoryData: commandContext.taskHistoryData || null,
+			chatMessages: commandContext.chatMessages || [],
 		}
 	}
 
@@ -495,7 +497,7 @@ function getProvider(
 	command: Command,
 	currentArgs: string[],
 	argumentIndex: number,
-	commandContext?: any,
+	commandContext?: ArgumentProviderCommandContext,
 ): ArgumentProvider | null {
 	// Check conditional providers
 	if (definition.conditionalProviders) {
@@ -589,7 +591,10 @@ function getCacheKey(definition: ArgumentDefinition, command: Command, index: nu
 /**
  * Get argument suggestions for current input
  */
-export async function getArgumentSuggestions(input: string, commandContext?: any): Promise<ArgumentSuggestion[]> {
+export async function getArgumentSuggestions(
+	input: string,
+	commandContext?: ArgumentProviderCommandContext,
+): Promise<ArgumentSuggestion[]> {
 	const state = detectInputState(input)
 
 	if (state.type !== "argument" || !state.currentArgument) {
@@ -774,7 +779,7 @@ export async function getFileMentionSuggestions(
 export async function getAllSuggestions(
 	input: string,
 	cursorPosition: number,
-	commandContext?: any,
+	commandContext?: ArgumentProviderCommandContext,
 	cwd?: string,
 ): Promise<
 	| { type: "command"; suggestions: CommandSuggestion[] }

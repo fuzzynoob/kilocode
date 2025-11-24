@@ -54,6 +54,7 @@ export interface WebviewMessage {
 		| "deleteApiConfiguration"
 		| "loadApiConfiguration"
 		| "loadApiConfigurationById"
+		| "getProfileConfigurationForEditing" // kilocode_change: Request to get profile config without activating
 		| "renameApiConfiguration"
 		| "getListApiConfiguration"
 		| "customInstructions"
@@ -93,6 +94,7 @@ export interface WebviewMessage {
 		| "requestOpenAiModels"
 		| "requestOllamaModels"
 		| "requestLmStudioModels"
+		| "requestRooModels"
 		| "requestVsCodeLmModels"
 		| "requestHuggingFaceModels"
 		| "openImage"
@@ -114,6 +116,7 @@ export interface WebviewMessage {
 		| "autoCondenseContextPercent"
 		| "condensingApiConfigId"
 		| "updateCondensingPrompt"
+		| "yoloGatekeeperApiConfigId" // kilocode_change: AI gatekeeper for YOLO mode
 		| "playSound"
 		| "playTts"
 		| "stopTts"
@@ -123,6 +126,7 @@ export interface WebviewMessage {
 		| "soundVolume"
 		| "diffEnabled"
 		| "enableCheckpoints"
+		| "checkpointTimeout"
 		| "browserViewportSize"
 		| "screenshotQuality"
 		| "remoteBrowserHost"
@@ -186,6 +190,7 @@ export interface WebviewMessage {
 		| "openCustomModesSettings"
 		| "checkpointDiff"
 		| "checkpointRestore"
+		| "requestCheckpointRestoreApproval"
 		| "seeNewChanges" // kilocode_change
 		| "deleteMcpServer"
 		| "maxOpenTabsContext"
@@ -208,6 +213,8 @@ export interface WebviewMessage {
 		| "allowVeryLargeReads" // kilocode_change
 		| "includeDiagnosticMessages"
 		| "maxDiagnosticMessages"
+		| "includeCurrentTime"
+		| "includeCurrentCost"
 		| "searchFiles"
 		| "setHistoryPreviewCollapsed"
 		| "showFeedbackOptions" // kilocode_change
@@ -311,6 +318,7 @@ export interface WebviewMessage {
 		| "editQueuedMessage"
 		| "dismissUpsell"
 		| "getDismissedUpsells"
+		| "requestManagedIndexerState" // kilocode_change
 	text?: string
 	editedMessageContent?: string
 	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "cloud"
@@ -388,6 +396,7 @@ export interface WebviewMessage {
 			| "gemini"
 			| "mistral"
 			| "vercel-ai-gateway"
+			| "openrouter"
 		codebaseIndexEmbedderBaseUrl?: string
 		codebaseIndexEmbedderModelId: string
 		codebaseIndexEmbedderModelDimension?: number // Generic dimension for all providers
@@ -402,6 +411,7 @@ export interface WebviewMessage {
 		codebaseIndexGeminiApiKey?: string
 		codebaseIndexMistralApiKey?: string
 		codebaseIndexVercelAiGatewayApiKey?: string
+		codebaseIndexOpenRouterApiKey?: string
 	}
 }
 
@@ -475,10 +485,10 @@ export interface TaskHistoryResponsePayload {
 // kilocode_change end
 
 export const checkoutDiffPayloadSchema = z.object({
-	ts: z.number(),
+	ts: z.number().optional(),
 	previousCommitHash: z.string().optional(),
 	commitHash: z.string(),
-	mode: z.enum(["full", "checkpoint"]),
+	mode: z.enum(["full", "checkpoint", "from-init", "to-current"]),
 })
 
 export type CheckpointDiffPayload = z.infer<typeof checkoutDiffPayloadSchema>
@@ -490,6 +500,15 @@ export const checkoutRestorePayloadSchema = z.object({
 })
 
 export type CheckpointRestorePayload = z.infer<typeof checkoutRestorePayloadSchema>
+
+export const requestCheckpointRestoreApprovalPayloadSchema = z.object({
+	commitHash: z.string(),
+	checkpointTs: z.number(),
+	messagesToRemove: z.number(),
+	confirmationText: z.string(),
+})
+
+export type RequestCheckpointRestoreApprovalPayload = z.infer<typeof requestCheckpointRestoreApprovalPayloadSchema>
 
 export interface IndexingStatusPayload {
 	state: "Standby" | "Indexing" | "Indexed" | "Error"
@@ -517,6 +536,7 @@ export type WebViewMessagePayload =
 	| SeeNewChangesPayload
 	| TasksByIdRequestPayload
 	| TaskHistoryRequestPayload
+	| RequestCheckpointRestoreApprovalPayload
 	// kilocode_change end
 	| CheckpointDiffPayload
 	| CheckpointRestorePayload

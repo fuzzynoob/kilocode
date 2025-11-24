@@ -11,6 +11,7 @@ import type {
 	FileMentionSuggestion,
 	FileMentionContext,
 } from "../../services/autocomplete.js"
+import type { ExtensionMessage } from "../../types/messages.js"
 import {
 	getSuggestions,
 	getArgumentSuggestions,
@@ -42,9 +43,10 @@ import {
 	showAutocompleteMenuAtom,
 	getSelectedSuggestionAtom,
 } from "../atoms/ui.js"
+import { shellModeActiveAtom } from "../atoms/shell.js"
 import { textBufferStringAtom, textBufferCursorAtom } from "../atoms/textBuffer.js"
 import { routerModelsAtom, extensionStateAtom } from "../atoms/extension.js"
-import { providerAtom, updateProviderAtom } from "../atoms/config.js"
+import { configAtom, providerAtom, updateProviderAtom } from "../atoms/config.js"
 import { requestRouterModelsAtom } from "../atoms/actions.js"
 import { profileDataAtom, profileLoadingAtom } from "../atoms/profile.js"
 import { taskHistoryDataAtom } from "../atoms/taskHistory.js"
@@ -150,6 +152,7 @@ export function useCommandInput(): UseCommandInputReturn {
 	const inputValue = useAtomValue(textBufferStringAtom)
 	const cursor = useAtomValue(textBufferCursorAtom)
 	const showAutocomplete = useAtomValue(showAutocompleteAtom)
+	const isShellMode = useAtomValue(shellModeActiveAtom)
 	const commandSuggestions = useAtomValue(suggestionsAtom)
 	const argumentSuggestions = useAtomValue(argumentSuggestionsAtom)
 	const fileMentionSuggestions = useAtomValue(fileMentionSuggestionsAtom)
@@ -161,10 +164,11 @@ export function useCommandInput(): UseCommandInputReturn {
 	const selectedSuggestion = useAtomValue(getSelectedSuggestionAtom)
 
 	// Get command context for autocomplete
+	const config = useAtomValue(configAtom)
 	const routerModels = useAtomValue(routerModelsAtom)
 	const currentProvider = useAtomValue(providerAtom)
 	const extensionState = useAtomValue(extensionStateAtom)
-	const kilocodeDefaultModel = extensionState?.kilocodeDefaultModel || ""
+	const kilocodeDefaultModel = (extensionState?.kilocodeDefaultModel as string | undefined) || ""
 	const profileData = useAtomValue(profileDataAtom)
 	const profileLoading = useAtomValue(profileLoadingAtom)
 	const taskHistoryData = useAtomValue(taskHistoryDataAtom)
@@ -214,6 +218,17 @@ export function useCommandInput(): UseCommandInputReturn {
 	}, [showAutocompleteAction])
 
 	const updateSuggestions = useCallback(async () => {
+		// In shell mode, disable all autocomplete
+		// Shell commands use @ (emails, SSH), / (paths), and other special chars
+		// that shouldn't trigger autocomplete suggestions
+		if (isShellMode) {
+			// Clear all suggestion state
+			clearFileMentionAction()
+			setSuggestionsAction([])
+			setArgumentSuggestionsAction([])
+			return
+		}
+
 		// Calculate cursor position in the text (convert row/col to absolute position)
 		const lines = inputValue.split("\n")
 		let cursorPosition = 0
@@ -234,7 +249,6 @@ export function useCommandInput(): UseCommandInputReturn {
 			return
 		}
 
-		// Clear file mention state if not in context
 		clearFileMentionAction()
 
 		// Fall back to command/argument detection
@@ -254,12 +268,14 @@ export function useCommandInput(): UseCommandInputReturn {
 		} else if (state.type === "argument") {
 			// Create command context for argument providers
 			const commandContext = {
+				config,
 				routerModels,
 				currentProvider: currentProvider || null,
 				kilocodeDefaultModel,
 				profileData,
 				profileLoading,
 				taskHistoryData,
+				chatMessages: [] as ExtensionMessage[],
 				updateProviderModel: async (modelId: string) => {
 					if (!currentProvider) {
 						throw new Error("No provider configured")
@@ -286,11 +302,13 @@ export function useCommandInput(): UseCommandInputReturn {
 		inputValue,
 		cursor,
 		cwd,
+		isShellMode,
 		setSuggestionsAction,
 		setArgumentSuggestionsAction,
 		setFileMentionSuggestionsAction,
 		setFileMentionContextAction,
 		clearFileMentionAction,
+		config,
 		routerModels,
 		currentProvider,
 		kilocodeDefaultModel,
